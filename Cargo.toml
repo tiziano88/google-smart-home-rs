@@ -1,0 +1,7 @@
+[package]
+name = "smartlights"
+version = "0.1.0"
+authors = ["Tiziano Santoro <tiziano88@gmail.com>"]
+
+[dependencies]
+iron = "0.5.*"
