@@ -1,11 +1,61 @@
 extern crate iron;
 extern crate router;
 extern crate params;
+extern crate serde;
+extern crate serde_json;
+
+#[macro_use]
+extern crate serde_derive;
+
+use std::io::Read;
 
 use iron::prelude::*;
 use iron::status;
 use params::{Params, Value};
 use router::Router;
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Fulfillment {
+    conversation_name: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Intent {
+    name: String,
+    parameters: Vec<Parameter>,
+    trigger: Trigger,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Trigger {
+    query_patterns: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Parameter {
+    name: String,
+    type_: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Action {
+    name: String,
+    fulfillment: Fulfillment,
+    intent: Intent,
+    description: String,
+    #[serde(rename = "signInRequired")]
+    sign_in_required: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Type {
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct ActionPackage {
+    actions: Vec<Action>,
+    types: Vec<Type>,
+}
 
 fn main() {
     println!("Hello, world!");
@@ -13,6 +63,7 @@ fn main() {
     control.get("/auth", auth_handler, "auth")
         .get("/token", token_handler, "token")
         .get("/login", login_handler, "login")
+        .post("/action", action_handler, "action")
         .get("/", index_handler, "index");
     Iron::new(control)
         .http("127.0.0.1:3000")
@@ -52,6 +103,14 @@ fn login_handler(req: &mut Request) -> IronResult<Response> {
     let password = map.find(&["password"]);
 
     Ok(Response::with((status::Ok, "login")))
+}
+
+fn action_handler(req: &mut Request) -> IronResult<Response> {
+    let mut body = String::new();
+    req.body.read_to_string(&mut body).unwrap();
+    let action_package: ActionPackage = serde_json::from_str(&body).unwrap();
+    println!("action_package: {:?}", action_package);
+    Ok(Response::with((status::Ok, "index")))
 }
 
 fn index_handler(req: &mut Request) -> IronResult<Response> {
