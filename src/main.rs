@@ -35,10 +35,22 @@ fn auth_handler(req: &mut Request) -> IronResult<Response> {
 }
 
 fn token_handler(req: &mut Request) -> IronResult<Response> {
+    let map = req.get_ref::<Params>().unwrap();
+
+    let grant_type = map.find(&["grant_type"]);
+    let code = map.find(&["code"]);
+    let redirect_uri = map.find(&["redirect_uri"]);
+    let client_id = map.find(&["client_id"]);
+
     Ok(Response::with((status::Ok, "token")))
 }
 
 fn login_handler(req: &mut Request) -> IronResult<Response> {
+    let map = req.get_ref::<Params>().unwrap();
+
+    let username = map.find(&["username"]);
+    let password = map.find(&["password"]);
+
     Ok(Response::with((status::Ok, "login")))
 }
 
