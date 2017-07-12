@@ -8,6 +8,9 @@ extern crate url;
 #[macro_use]
 extern crate serde_derive;
 
+#[macro_use]
+extern crate maplit;
+
 use std::collections::BTreeMap;
 use std::io::Read;
 
@@ -22,6 +25,7 @@ struct SyncResponseDevice {
     id: String,
     #[serde(rename = "type")]
     type_: String,
+    name: Name,
     traits: Vec<String>,
     #[serde(rename = "willReportState")]
     will_report_state: bool,
@@ -29,11 +33,20 @@ struct SyncResponseDevice {
     room_hint: Option<String>,
     #[serde(rename = "structureHint")]
     structure_hint: Option<String>,
-    config: Config,
+    #[serde(rename = "deviceInfo")]
+    device_info: Option<DeviceInfo>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
-struct Config {
+struct Name {
+    #[serde(rename = "defaultName")]
+    default_name: Vec<String>,
+    name: Option<String>,
+    nicknames: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+struct DeviceInfo {
     manifacturer: String,
     model: String,
     #[serde(rename = "hwVersion")]
@@ -149,6 +162,10 @@ struct ExecuteResponse {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct ExecuteResponsePayload {
+    #[serde(rename = "errorCode")]
+    error_code: Option<String>,
+    #[serde(rename = "debugString")]
+    debug_string: Option<String>,
     commands: Vec<ExecuteResponseCommand>,
 }
 
@@ -388,8 +405,68 @@ fn action_handler(req: &mut Request) -> IronResult<Response> {
     let mut body = String::new();
     req.body.read_to_string(&mut body).unwrap();
     let action_request: ActionRequest = serde_json::from_str(&body).unwrap();
+
     println!("action_request: {:?}", action_request);
-    Ok(Response::with((status::Ok, "index")))
+
+    for input in &action_request.inputs {
+        if input.intent == "action.devices.SYNC" {
+            let response = SyncResponse {
+                request_id: action_request.request_id.clone(),
+                payload: SyncResponsePayload {
+                    agent_user_id: "1111".to_string(),
+                    devices: vec![SyncResponseDevice {
+                                      id: "123".to_string(),
+                                      type_: "action.devicves.types.LIGHT".to_string(),
+                                      traits: vec!["action.devices.traits.OnOff".to_string()],
+                                      name: Name {
+                                          default_name: vec!["foo".to_string()],
+                                          name: Some("foo".to_string()),
+                                          nicknames: vec![],
+                                      },
+                                      will_report_state: false,
+                                      device_info: None,
+                                      room_hint: None,
+                                      structure_hint: None,
+                                  }],
+                },
+            };
+            let res = serde_json::to_string(&response).unwrap_or("".to_string());
+            return Ok(Response::with((status::Ok, res)));
+        } else if input.intent == "action.devices.QUERY" {
+            let response = QueryResponse {
+                request_id: action_request.request_id.clone(),
+                payload: QueryResponsePayload {
+                    devices: btreemap!{
+                        "123".to_string() => DeviceStates {
+                            online: true,
+                            on: true,
+                            brightness: 10,
+                            color: Color {
+                                name: "red".to_string(),
+                                temperature: 0,
+                                spectrum_rgb: 0,
+                            },
+                        }
+                    },
+                },
+            };
+            let res = serde_json::to_string(&response).unwrap_or("".to_string());
+            return Ok(Response::with((status::Ok, res)));
+        } else if input.intent == "action.devices.EXECUTE" {
+            let response = ExecuteResponse {
+                request_id: action_request.request_id.clone(),
+                payload: ExecuteResponsePayload {
+                    error_code: Some("ERROR".to_string()),
+                    debug_string: Some("TODO".to_string()),
+                    commands: vec![],
+                },
+            };
+            let res = serde_json::to_string(&response).unwrap_or("".to_string());
+            return Ok(Response::with((status::Ok, res)));
+        }
+    }
+
+    Ok(Response::with((status::Ok, "ACTION")))
 }
 
 fn index_handler(req: &mut Request) -> IronResult<Response> {
