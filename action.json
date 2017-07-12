@@ -1,0 +1,15 @@
+{
+  "actions": [{
+    "name": "action.devices",
+    "deviceControl": {},
+    "fulfillment": {
+      "conversationName": "automation"
+    }
+  }],
+  "conversations": {
+    "automation": {
+      "name": "automation",
+      "url": "http://xxx/action"
+    }
+  }
+}

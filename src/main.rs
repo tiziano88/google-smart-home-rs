@@ -18,49 +18,6 @@ use router::Router;
 use url::Url;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
-struct Fulfillment {
-    conversation_name: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
-struct Intent {
-    name: String,
-    parameters: Vec<Parameter>,
-    trigger: Trigger,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
-struct Trigger {
-    query_patterns: Vec<String>,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
-struct Parameter {
-    name: String,
-    type_: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
-struct Action {
-    name: String,
-    fulfillment: Fulfillment,
-    intent: Intent,
-    description: String,
-    #[serde(rename = "signInRequired")]
-    sign_in_required: bool,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
-struct Type {
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
-struct ActionPackage {
-    actions: Vec<Action>,
-    types: Vec<Type>,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct SyncResponseDevice {
     id: String,
     #[serde(rename = "type")]
@@ -430,8 +387,8 @@ fn login_handler(req: &mut Request) -> IronResult<Response> {
 fn action_handler(req: &mut Request) -> IronResult<Response> {
     let mut body = String::new();
     req.body.read_to_string(&mut body).unwrap();
-    let action_package: ActionPackage = serde_json::from_str(&body).unwrap();
-    println!("action_package: {:?}", action_package);
+    let action_request: ActionRequest = serde_json::from_str(&body).unwrap();
+    println!("action_request: {:?}", action_request);
     Ok(Response::with((status::Ok, "index")))
 }
 
