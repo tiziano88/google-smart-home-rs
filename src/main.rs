@@ -17,30 +17,30 @@ use iron::status;
 use router::Router;
 use url::Url;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct Fulfillment {
     conversation_name: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct Intent {
     name: String,
     parameters: Vec<Parameter>,
     trigger: Trigger,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct Trigger {
     query_patterns: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct Parameter {
     name: String,
     type_: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct Action {
     name: String,
     fulfillment: Fulfillment,
@@ -50,17 +50,17 @@ struct Action {
     sign_in_required: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct Type {
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct ActionPackage {
     actions: Vec<Action>,
     types: Vec<Type>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct SyncResponseDevice {
     id: String,
     #[serde(rename = "type")]
@@ -75,7 +75,7 @@ struct SyncResponseDevice {
     config: Config,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct Config {
     manifacturer: String,
     model: String,
@@ -85,89 +85,89 @@ struct Config {
     sw_version: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct SyncRequest {
     #[serde(rename = "requestId")]
     request_id: String,
     inputs: Vec<SyncRequestInput>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct SyncRequestInput {
     intent: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct SyncResponse {
     #[serde(rename = "requestId")]
     request_id: String,
     payload: SyncResponsePayload,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct SyncResponsePayload {
     #[serde(rename = "agentUserId")]
     agent_user_id: String,
     devices: Vec<SyncResponseDevice>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct QueryRequest {}
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct QueryResponse {
     #[serde(rename = "requestId")]
     request_id: String,
     payload: QueryResponsePayload,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct QueryResponsePayload {
     devices: BTreeMap<String, DeviceStates>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct ExecuteRequest {
     #[serde(rename = "requestId")]
     request_id: String,
     inputs: Vec<ExecuteRequestInput>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct ExecuteRequestInput {
     intent: String,
     payload: ExecuteRequestInputPayload,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct ExecuteRequestInputPayload {
     commands: Vec<Command>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct Command {
     devices: Vec<RequestDevice>,
     execution: Vec<Execution>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct RequestDevice {
     id: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct Execution {
     command: String,
     params: Params,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct Params {
     // TODO: Add more commands.
     on: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct DeviceStates {
     online: bool,
     on: bool,
@@ -175,7 +175,7 @@ struct DeviceStates {
     color: Color,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct Color {
     name: String,
     temperature: u64,
@@ -183,26 +183,26 @@ struct Color {
     spectrum_rgb: u64,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct ExecuteResponse {
     #[serde(rename = "requestId")]
     request_id: String,
     payload: ExecuteResponsePayload,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct ExecuteResponsePayload {
     commands: Vec<ExecuteResponseCommand>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct ExecuteResponseCommand {
     ids: Vec<String>,
     status: String,
     states: DeviceStates,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct ActionRequest {
     #[serde(rename = "requestId")]
     request_id: String,
@@ -220,6 +220,14 @@ fn test_sync_request() {
 }
 "#;
     let parsed_req: ActionRequest = serde_json::from_str(&json_req).unwrap();
+    let expected_req = ActionRequest {
+        request_id: "ff36a3cc-ec34-11e6-b1a0-64510650abcf".to_string(),
+        inputs: vec![ActionRequestInput {
+                         intent: "action.devices.SYNC".to_string(),
+                         payload: None,
+                     }],
+    };
+    assert_eq!(expected_req, parsed_req);
 }
 
 #[test]
@@ -250,25 +258,100 @@ fn test_query_request() {
 }
 "#;
     let parsed_req: ActionRequest = serde_json::from_str(&json_req).unwrap();
+    let expected_req = ActionRequest {
+        request_id: "ff36a3cc-ec34-11e6-b1a0-64510650abcf".to_string(),
+        inputs: vec![ActionRequestInput {
+                         intent: "action.devices.QUERY".to_string(),
+                         payload: Some(ActionRequestPayload {
+                             devices: vec![RequestDevice { id: "123".to_string() },
+                                           RequestDevice { id: "456".to_string() }],
+                             commands: vec![],
+                         }),
+                     }],
+    };
+    assert_eq!(expected_req, parsed_req);
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+
+#[test]
+fn test_execute_request() {
+    let json_req = r#"
+{
+  "requestId": "ff36a3cc-ec34-11e6-b1a0-64510650abcf",
+  "inputs": [{
+    "intent": "action.devices.EXECUTE",
+    "payload": {
+      "commands": [{
+        "devices": [{
+          "id": "123",
+          "customData": {
+            "fooValue": 74,
+            "barValue": true,
+            "bazValue": "sheepdip"
+          }
+        },{
+          "id": "456",
+          "customData": {
+            "fooValue": 36,
+            "barValue": false,
+            "bazValue": "moarsheep"
+          }
+        }],
+        "execution": [{
+          "command": "action.devices.commands.OnOff",
+          "params": {
+            "on": true
+          }
+        }]
+      }]
+    }
+  }]
+}
+"#;
+    let parsed_req: ActionRequest = serde_json::from_str(&json_req).unwrap();
+    let expected_req = ActionRequest {
+        request_id: "ff36a3cc-ec34-11e6-b1a0-64510650abcf".to_string(),
+        inputs: vec![ActionRequestInput {
+                         intent: "action.devices.EXECUTE".to_string(),
+                         payload: Some(ActionRequestPayload {
+                             devices: vec![],
+                             commands: vec![
+                                 Command{
+                                     devices: vec![
+                                         RequestDevice{id: "123".to_string()},
+                                         RequestDevice{id: "456".to_string()},
+                                     ],
+                                     execution: vec![
+                                         Execution{
+                                             command: "action.devices.commands.OnOff".to_string(),
+                                             params: Params{
+                                                 on: true,
+                                             },
+                                         },
+                                     ],
+                                 },
+                             ],
+                         }),
+                     }],
+    };
+    assert_eq!(expected_req, parsed_req);
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct ActionRequestInput {
     intent: String,
     payload: Option<ActionRequestPayload>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct ActionRequestPayload {
     #[serde(default)]
     devices: Vec<RequestDevice>,
     #[serde(default)]
     commands: Vec<Command>,
-    #[serde(default)]
-    execution: Vec<Execution>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct AuthResponse {
     token_type: String,
     access_token: String,
