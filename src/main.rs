@@ -289,22 +289,20 @@ fn test_execute_request() {
                          intent: "action.devices.EXECUTE".to_string(),
                          payload: Some(ActionRequestPayload {
                              devices: vec![],
-                             commands: vec![
-                                 Command{
-                                     devices: vec![
-                                         RequestDevice{id: "123".to_string()},
-                                         RequestDevice{id: "456".to_string()},
-                                     ],
-                                     execution: vec![
-                                         Execution{
-                                             command: "action.devices.commands.OnOff".to_string(),
-                                             params: Params{
-                                                 on: true,
-                                             },
-                                         },
-                                     ],
-                                 },
-                             ],
+                             commands: vec![Command {
+                                                devices: vec![RequestDevice {
+                                                                  id: "123".to_string(),
+                                                              },
+                                                              RequestDevice {
+                                                                  id: "456".to_string(),
+                                                              }],
+                                                execution: vec![Execution {
+                                                                    command: "action.devices.\
+                                                                              commands.OnOff"
+                                                                        .to_string(),
+                                                                    params: Params { on: true },
+                                                                }],
+                                            }],
                          }),
                      }],
     };
@@ -342,7 +340,7 @@ fn main() {
         .post("/action", action_handler, "action")
         .get("/", index_handler, "index");
     Iron::new(control)
-        .http("127.0.0.1:3000")
+        .http("0.0.0.0:1234")
         .unwrap();
 }
 
