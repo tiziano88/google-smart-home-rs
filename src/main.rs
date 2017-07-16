@@ -337,7 +337,18 @@ struct AuthResponse {
     expires_in: i64,
 }
 
+struct Light {}
+
+impl Light {
+    fn SetStatus(&mut self, s: bool) {
+        println!("set status to: {}", s);
+    }
+}
+
+struct Hub {}
+
 fn main() {
+    let mut light = Light {};
     println!("Hello, world!");
     let mut control = Router::new();
     control.get("/auth", auth_handler, "auth")
