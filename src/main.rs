@@ -14,6 +14,7 @@ extern crate maplit;
 use std::collections::BTreeMap;
 use std::io::Read;
 
+use iron::headers::ContentType;
 use iron::modifiers::Redirect;
 use iron::prelude::*;
 use iron::status;
@@ -30,18 +31,23 @@ struct SyncResponseDevice {
     #[serde(rename = "willReportState")]
     will_report_state: bool,
     #[serde(rename = "roomHint")]
+    #[serde(skip)]
     room_hint: Option<String>,
     #[serde(rename = "structureHint")]
+    #[serde(skip)]
     structure_hint: Option<String>,
     #[serde(rename = "deviceInfo")]
+    #[serde(skip)]
     device_info: Option<DeviceInfo>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 struct Name {
     #[serde(rename = "defaultName")]
+    #[serde(skip)]
     default_name: Vec<String>,
     name: Option<String>,
+    #[serde(skip)]
     nicknames: Vec<String>,
 }
 
@@ -335,7 +341,7 @@ fn main() {
     println!("Hello, world!");
     let mut control = Router::new();
     control.get("/auth", auth_handler, "auth")
-        .get("/token", token_handler, "token")
+        .post("/token", token_handler, "token")
         .get("/login", login_handler, "login")
         .post("/action", action_handler, "action")
         .get("/", index_handler, "index");
@@ -356,10 +362,15 @@ fn auth_handler(req: &mut Request) -> IronResult<Response> {
     println!("uri: {:?}", redirect_uri);
     println!("scope: {:?}", scope);
 
+    let s = match state {
+        Some(&params::Value::String(ref x)) => x,
+        _ => "",
+    };
+
     let u = match redirect_uri {
         Some(&params::Value::String(ref x)) => {
             let mut url = Url::parse(&x).unwrap();
-            url.set_query(Some("code=123"));
+            url.set_query(Some(&format!("code=123&state={}", s)));
             url
         }
         _ => Url::parse("").unwrap(),
@@ -414,7 +425,7 @@ fn action_handler(req: &mut Request) -> IronResult<Response> {
                     agent_user_id: "1111".to_string(),
                     devices: vec![SyncResponseDevice {
                                       id: "123".to_string(),
-                                      type_: "action.devicves.types.LIGHT".to_string(),
+                                      type_: "action.devices.types.LIGHT".to_string(),
                                       traits: vec!["action.devices.traits.OnOff".to_string()],
                                       name: Name {
                                           default_name: vec!["foo".to_string()],
@@ -429,7 +440,9 @@ fn action_handler(req: &mut Request) -> IronResult<Response> {
                 },
             };
             let res = serde_json::to_string(&response).unwrap_or("".to_string());
-            return Ok(Response::with((status::Ok, res)));
+            let mut rsp = Response::with((status::Ok, res));
+            rsp.headers.set(ContentType::json());
+            return Ok(rsp);
         } else if input.intent == "action.devices.QUERY" {
             let response = QueryResponse {
                 request_id: action_request.request_id.clone(),
@@ -449,7 +462,9 @@ fn action_handler(req: &mut Request) -> IronResult<Response> {
                 },
             };
             let res = serde_json::to_string(&response).unwrap_or("".to_string());
-            return Ok(Response::with((status::Ok, res)));
+            let mut rsp = Response::with((status::Ok, res));
+            rsp.headers.set(ContentType::json());
+            return Ok(rsp);
         } else if input.intent == "action.devices.EXECUTE" {
             let response = ExecuteResponse {
                 request_id: action_request.request_id.clone(),
@@ -460,11 +475,15 @@ fn action_handler(req: &mut Request) -> IronResult<Response> {
                 },
             };
             let res = serde_json::to_string(&response).unwrap_or("".to_string());
-            return Ok(Response::with((status::Ok, res)));
+            let mut rsp = Response::with((status::Ok, res));
+            rsp.headers.set(ContentType::json());
+            return Ok(rsp);
         }
     }
 
-    Ok(Response::with((status::Ok, "ACTION")))
+    let mut rsp = Response::with((status::Ok, "ACTION"));
+    rsp.headers.set(ContentType::json());
+    Ok(rsp)
 }
 
 fn index_handler(req: &mut Request) -> IronResult<Response> {

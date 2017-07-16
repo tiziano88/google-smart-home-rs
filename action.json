@@ -1,15 +1,17 @@
 {
-  "actions": [{
-    "name": "action.devices",
-    "deviceControl": {},
-    "fulfillment": {
-      "conversationName": "automation"
+  "actions": [
+    {
+      "name": "actions.devices",
+      "deviceControl": {},
+      "fulfillment": {
+        "conversationName": "automation"
+      }
     }
-  }],
+  ],
   "conversations": {
     "automation": {
       "name": "automation",
-      "url": "http://xxx/action"
+      "url": "https://b8b0802f.ngrok.io/action"
     }
   }
 }
