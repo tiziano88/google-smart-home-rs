@@ -24,18 +24,14 @@ use url::Url;
 mod google_actions;
 use google_actions::*;
 
-struct Light {}
-
-impl Light {
-    fn SetStatus(&mut self, s: bool) {
-        println!("set status to: {}", s);
-    }
-}
-
-struct Hub {}
+mod smart_home;
+use smart_home::*;
 
 fn main() {
-    let mut light = Light {};
+    let mut light = Light {
+        id: "Foo".to_string(),
+        name: "Foo".to_string(),
+    };
     println!("Hello, world!");
     let mut control = Router::new();
     control.get("/auth", auth_handler, "auth")
