@@ -15,6 +15,7 @@ use std::collections::BTreeMap;
 use std::io::Read;
 
 use iron::headers::ContentType;
+use iron::middleware::Handler;
 use iron::modifiers::Redirect;
 use iron::prelude::*;
 use iron::status;
@@ -27,17 +28,31 @@ use google_actions::*;
 mod smart_home;
 use smart_home::*;
 
+struct Hub {
+    lights: Vec<Light>,
+}
+
+impl Hub {
+    fn action_handler(&mut self, req: &mut Request) -> IronResult<Response> {
+        Ok(Response::with((status::Ok, "xxx")))
+    }
+}
+
+impl Handler for Hub {
+    fn handle(&self, req: &mut Request) -> IronResult<Response> {
+        Ok(Response::with((status::Ok, "xxx")))
+    }
+}
+
 fn main() {
-    let mut light = Light {
-        id: "Foo".to_string(),
-        name: "Foo".to_string(),
-    };
+    let mut hub = Hub { lights: vec![] };
     println!("Hello, world!");
     let mut control = Router::new();
     control.get("/auth", auth_handler, "auth")
         .post("/token", token_handler, "token")
         .get("/login", login_handler, "login")
         .post("/action", action_handler, "action")
+        .post("/xxx", hub, "action")
         .get("/", index_handler, "index");
     Iron::new(control)
         .http("0.0.0.0:1234")
