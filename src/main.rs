@@ -93,8 +93,8 @@ impl Handler for Hub {
                 rsp.headers.set(ContentType::json());
                 return Ok(rsp);
             } else if input.intent == "action.devices.EXECUTE" {
-                let light_status = light.get_status();
-                light.set_status(light_status);
+                let light_status = light.get_status().clone();
+                light.set_status(&light_status);
 
                 let response = ExecuteResponse {
                     request_id: action_request.request_id.clone(),
@@ -122,6 +122,7 @@ fn main() {
         light: Mutex::new(Light {
             id: "11".to_string(),
             name: "11".to_string(),
+            status: LightStatus::default(),
         }),
     };
     println!("Hello, world!");
