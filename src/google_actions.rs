@@ -118,8 +118,12 @@ pub struct Execution {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct Params {
-    // TODO: Add more commands.
-    pub on: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub on: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub brightness: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub color: Option<Color>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
