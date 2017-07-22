@@ -30,7 +30,6 @@ mod smart_home;
 use smart_home::*;
 
 struct Hub {
-    light: Mutex<Light>,
     lights: Mutex<Vec<Light>>,
 }
 
@@ -53,8 +52,8 @@ impl Handler for Hub {
                     },
                 };
 
-                {
-                    let light = self.light.lock().unwrap();
+                let ref lights = *self.lights.lock().unwrap();
+                for light in lights {
                     response.payload.devices.push(SyncResponseDevice {
                         id: light.id.clone(),
                         type_: "action.devices.types.LIGHT".to_string(),
@@ -84,8 +83,8 @@ impl Handler for Hub {
                     payload: QueryResponsePayload { devices: btreemap!{} },
                 };
 
-                {
-                    let light = self.light.lock().unwrap();
+                let ref lights = *self.lights.lock().unwrap();
+                for light in lights {
                     let light_status = &light.status;
                     response.payload.devices.insert(light.id.clone(),
                                                     DeviceStates {
@@ -121,37 +120,41 @@ impl Handler for Hub {
                     for command in &p.commands {
                         println!("command: {:?}", command);
                         for execution in &command.execution {
-                            let mut light = self.light.lock().unwrap();
-                            println!("execution: {:?}", execution);
-                            if let Some(s) = execution.params.on {
-                                light.set_on(s);
-                            }
-                            if let Some(s) = execution.params.brightness {
-                                light.set_brightness(s);
-                            }
-                            if let Some(ref s) = execution.params.color {
-                                if let Some(s) = s.spectrum_rgb {
-                                    light.set_spectrum_rgb(s);
+                            let ref mut lights = *self.lights.lock().unwrap();
+                            for light in lights {
+                                println!("execution: {:?}", execution);
+                                if let Some(s) = execution.params.on {
+                                    light.set_on(s);
+                                }
+                                if let Some(s) = execution.params.brightness {
+                                    light.set_brightness(s);
+                                }
+                                if let Some(ref s) = execution.params.color {
+                                    if let Some(s) = s.spectrum_rgb {
+                                        light.set_spectrum_rgb(s);
+                                    }
                                 }
                             }
                         }
                         for device in &command.devices {
                             println!("device: {:?}", device);
-                            let light = self.light.lock().unwrap();
-                            response.payload.commands.push(ExecuteResponseCommand {
-                                ids: vec![light.id.clone()],
-                                status: "SUCCESS".to_string(),
-                                states: DeviceStates {
-                                    online: true,
-                                    on: light.status.on,
-                                    brightness: light.status.brightness,
-                                    color: Color {
-                                        name: None,
-                                        temperature: None,
-                                        spectrum_rgb: Some(light.status.spectrum_rgb),
+                            let ref lights = *self.lights.lock().unwrap();
+                            for light in lights {
+                                response.payload.commands.push(ExecuteResponseCommand {
+                                    ids: vec![light.id.clone()],
+                                    status: "SUCCESS".to_string(),
+                                    states: DeviceStates {
+                                        online: true,
+                                        on: light.status.on,
+                                        brightness: light.status.brightness,
+                                        color: Color {
+                                            name: None,
+                                            temperature: None,
+                                            spectrum_rgb: Some(light.status.spectrum_rgb),
+                                        },
                                     },
-                                },
-                            });
+                                });
+                            }
                         }
                     }
                 }
@@ -172,12 +175,11 @@ impl Handler for Hub {
 
 fn main() {
     let mut hub = Hub {
-        light: Mutex::new(Light {
-            id: "11".to_string(),
-            name: "TV lights".to_string(),
-            status: LightStatus::default(),
-        }),
-        lights: Mutex::new(vec![]),
+        lights: Mutex::new(vec![Light {
+                                    id: "11".to_string(),
+                                    name: "TV lights".to_string(),
+                                    status: LightStatus::default(),
+                                }]),
     };
     println!("Hello, world!");
     let mut control = Router::new();
