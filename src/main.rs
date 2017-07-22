@@ -31,6 +31,7 @@ use smart_home::*;
 
 struct Hub {
     light: Mutex<Light>,
+    lights: Mutex<Vec<Light>>,
 }
 
 impl Handler for Hub {
@@ -58,7 +59,7 @@ impl Handler for Hub {
                         id: light.id.clone(),
                         type_: "action.devices.types.LIGHT".to_string(),
                         traits: vec!["action.devices.traits.OnOff".to_string(),
-                                     "action.devices.traits.Brigthness".to_string(),
+                                     "action.devices.traits.Brightness".to_string(),
                                      "action.devices.traits.ColorSpectrum".to_string()],
                         name: Name {
                             default_name: vec![light.name.to_string()],
@@ -72,8 +73,8 @@ impl Handler for Hub {
                     });
                 }
 
-
                 let res = serde_json::to_string(&response).unwrap_or("".to_string());
+                println!("action_response: {:?}", res);
                 let mut rsp = Response::with((status::Ok, res));
                 rsp.headers.set(ContentType::json());
                 return Ok(rsp);
@@ -92,47 +93,33 @@ impl Handler for Hub {
                                                         on: light_status.on,
                                                         brightness: light_status.brightness,
                                                         color: Color {
-                                                            name: "red".to_string(),
-                                                            temperature: 0,
-                                                            spectrum_rgb: light_status.spectrum_rgb,
+                                                            name: None,
+                                                            temperature: None,
+                                                            spectrum_rgb:
+                                                                Some(light_status.spectrum_rgb),
                                                         },
                                                     });
                 }
 
 
                 let res = serde_json::to_string(&response).unwrap_or("".to_string());
+                println!("action_response: {:?}", res);
                 let mut rsp = Response::with((status::Ok, res));
                 rsp.headers.set(ContentType::json());
                 return Ok(rsp);
             } else if input.intent == "action.devices.EXECUTE" {
-                let response = ExecuteResponse {
+                let mut response = ExecuteResponse {
                     request_id: action_request.request_id.clone(),
                     payload: ExecuteResponsePayload {
                         error_code: None,
                         debug_string: None,
-                        commands: vec![ExecuteResponseCommand {
-                                           ids: vec![],
-                                           status: "SUCCESS".to_string(),
-                                           states: DeviceStates {
-                                               online: true,
-                                               on: true,
-                                               brightness: 10,
-                                               color: Color {
-                                                   name: "xxx".to_string(),
-                                                   temperature: 10,
-                                                   spectrum_rgb: 10,
-                                               },
-                                           },
-                                       }],
+                        commands: vec![],
                     },
                 };
 
                 if let Some(ref p) = input.payload {
                     for command in &p.commands {
                         println!("command: {:?}", command);
-                        for device in &command.devices {
-                            println!("device: {:?}", device);
-                        }
                         for execution in &command.execution {
                             let mut light = self.light.lock().unwrap();
                             println!("execution: {:?}", execution);
@@ -143,14 +130,34 @@ impl Handler for Hub {
                                 light.set_brightness(s);
                             }
                             if let Some(ref s) = execution.params.color {
-                                light.set_spectrum_rgb(s.spectrum_rgb);
+                                if let Some(s) = s.spectrum_rgb {
+                                    light.set_spectrum_rgb(s);
+                                }
                             }
+                        }
+                        for device in &command.devices {
+                            println!("device: {:?}", device);
+                            let light = self.light.lock().unwrap();
+                            response.payload.commands.push(ExecuteResponseCommand {
+                                ids: vec![light.id.clone()],
+                                status: "SUCCESS".to_string(),
+                                states: DeviceStates {
+                                    online: true,
+                                    on: light.status.on,
+                                    brightness: light.status.brightness,
+                                    color: Color {
+                                        name: None,
+                                        temperature: None,
+                                        spectrum_rgb: Some(light.status.spectrum_rgb),
+                                    },
+                                },
+                            });
                         }
                     }
                 }
 
-
                 let res = serde_json::to_string(&response).unwrap_or("".to_string());
+                println!("action_response: {:?}", res);
                 let mut rsp = Response::with((status::Ok, res));
                 rsp.headers.set(ContentType::json());
                 return Ok(rsp);
@@ -170,6 +177,7 @@ fn main() {
             name: "TV lights".to_string(),
             status: LightStatus::default(),
         }),
+        lights: Mutex::new(vec![]),
     };
     println!("Hello, world!");
     let mut control = Router::new();

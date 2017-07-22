@@ -136,10 +136,16 @@ pub struct DeviceStates {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct Color {
-    pub name: String,
-    pub temperature: u64,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub temperature: Option<u64>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "spectrumRGB")]
-    pub spectrum_rgb: u64,
+    pub spectrum_rgb: Option<u64>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
