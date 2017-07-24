@@ -181,7 +181,6 @@ fn main() {
                                     status: LightStatus::default(),
                                 }]),
     };
-    println!("Hello, world!");
     let mut control = Router::new();
     control.get("/auth", auth_handler, "auth")
         .post("/token", token_handler, "token")
@@ -189,6 +188,7 @@ fn main() {
         .post("/action", hub, "post action")
         .get("/action", get_action_handler, "get action")
         .get("/", index_handler, "index");
+    println!("Listening on port 1234");
     Iron::new(control)
         .http("0.0.0.0:1234")
         .unwrap();

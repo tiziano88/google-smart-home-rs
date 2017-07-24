@@ -3,9 +3,11 @@
 set -x
 set -e
 
-readonly TARGET='pi@192.168.0.21'
+#readonly TARGET='arm-unknown-linux-gnueabihf'
+readonly TARGET='arm-unknown-linux-gnueabi'
 
-#scp target/arm-unknown-linux-gnueabihf/debug/scroll-phat-hd-rs pi@100.120.84.98:/home/pi/
-cargo build
-scp target/arm-unknown-linux-gnueabi/debug/smartlights ${TARGET}:/home/pi/
+readonly REMOTE='pi@192.168.0.21'
+
+cargo build --target=${TARGET}
+scp target/${TARGET}/debug/smartlights ${REMOTE}:/home/pi/
 #ssh ${TARGET} RUST_BACKTRACE=1 /home/pi/smartlights
