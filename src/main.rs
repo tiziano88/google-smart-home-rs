@@ -4,6 +4,7 @@ extern crate params;
 extern crate serde;
 extern crate serde_json;
 extern crate url;
+extern crate mote;
 
 #[macro_use]
 extern crate serde_derive;
@@ -179,6 +180,7 @@ fn main() {
                                     id: "11".to_string(),
                                     name: "TV lights".to_string(),
                                     status: LightStatus::default(),
+                                    mote: mote::Mote::new("/dev/ttyACM0"),
                                 }]),
     };
     let mut control = Router::new();

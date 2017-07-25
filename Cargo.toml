@@ -12,3 +12,5 @@ serde_json = "1.0"
 serde_derive = "1.0"
 url = "1.5"
 maplit = "0.1"
+rgb = "0.7.0"
+mote = { git = "https://github.com/tiziano88/mote-rs" }
