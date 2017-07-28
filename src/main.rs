@@ -32,6 +32,7 @@ use smart_home::*;
 
 struct Hub {
     lights: Mutex<Vec<Light>>,
+    devices: Mutex<Vec<Device>>,
 }
 
 impl Handler for Hub {
@@ -53,24 +54,46 @@ impl Handler for Hub {
                     },
                 };
 
-                let ref lights = *self.lights.lock().unwrap();
-                for light in lights {
-                    response.payload.devices.push(SyncResponseDevice {
-                        id: light.id.clone(),
-                        type_: light.type_.name(),
-                        traits: vec!["action.devices.traits.OnOff".to_string(),
-                                     "action.devices.traits.Brightness".to_string(),
-                                     "action.devices.traits.ColorSpectrum".to_string()],
-                        name: Name {
-                            default_name: vec![light.name.to_string()],
-                            name: Some(light.name.clone()),
-                            nicknames: vec![],
-                        },
-                        will_report_state: false,
-                        device_info: None,
-                        room_hint: None,
-                        structure_hint: None,
-                    });
+                let ref devices = *self.devices.lock().unwrap();
+                for device in devices {
+                    match device {
+                        &Device::Light(ref light) => {
+                            response.payload.devices.push(SyncResponseDevice {
+                                id: light.id.clone(),
+                                type_: light.type_.name(),
+                                traits: vec!["action.devices.traits.OnOff".to_string(),
+                                             "action.devices.traits.Brightness".to_string(),
+                                             "action.devices.traits.ColorSpectrum".to_string()],
+                                name: Name {
+                                    default_name: vec![light.name.to_string()],
+                                    name: Some(light.name.clone()),
+                                    nicknames: vec![],
+                                },
+                                will_report_state: false,
+                                device_info: None,
+                                room_hint: None,
+                                structure_hint: None,
+                            })
+                        }
+                        &Device::Thermostat(ref thermostat) => {
+                            response.payload.devices.push(SyncResponseDevice {
+                                id: thermostat.id.clone(),
+                                type_: "".to_string(), // XXX
+                                traits: vec!["action.devices.traits.TemperatureSetting"
+                                                 .to_string()],
+                                name: Name {
+                                    default_name: vec![thermostat.name.to_string()],
+                                    name: Some(thermostat.name.clone()),
+                                    nicknames: vec![],
+                                },
+                                // TODO: attributes.
+                                will_report_state: false,
+                                device_info: None,
+                                room_hint: None,
+                                structure_hint: None,
+                            })
+                        }
+                    }
                 }
 
                 let res = serde_json::to_string(&response).unwrap_or("".to_string());
@@ -101,6 +124,17 @@ impl Handler for Hub {
                                                     });
                 }
 
+                let ref devices = *self.devices.lock().unwrap();
+                for device in devices {
+                    match device {
+                        &Device::Light(ref light) => {
+                            // TODO
+                        }
+                        &Device::Thermostat(ref thermostat) => {
+                            // TODO
+                        }
+                    }
+                }
 
                 let res = serde_json::to_string(&response).unwrap_or("".to_string());
                 println!("action_response: {:?}", res);
@@ -183,6 +217,13 @@ fn main() {
                                     type_: LightType::Light,
                                     mote: mote::Mote::new("/dev/ttyACM0"),
                                 }]),
+        devices: Mutex::new(vec![Device::Light(Light {
+                                     id: "11".to_string(),
+                                     name: "TV lights".to_string(),
+                                     status: LightStatus::default(),
+                                     type_: LightType::Light,
+                                     mote: mote::Mote::new("/dev/ttyACM0"),
+                                 })]),
     };
     let mut control = Router::new();
     control.get("/auth", auth_handler, "auth")

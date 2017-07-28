@@ -41,18 +41,6 @@ pub struct DeviceInfo {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
-pub struct SyncRequest {
-    #[serde(rename = "requestId")]
-    pub request_id: String,
-    pub inputs: Vec<SyncRequestInput>,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
-pub struct SyncRequestInput {
-    pub intent: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct SyncResponse {
     #[serde(rename = "requestId")]
     pub request_id: String,
@@ -67,9 +55,6 @@ pub struct SyncResponsePayload {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
-pub struct QueryRequest {}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct QueryResponse {
     #[serde(rename = "requestId")]
     pub request_id: String,
@@ -79,24 +64,6 @@ pub struct QueryResponse {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct QueryResponsePayload {
     pub devices: BTreeMap<String, DeviceStates>,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
-pub struct ExecuteRequest {
-    #[serde(rename = "requestId")]
-    pub request_id: String,
-    pub inputs: Vec<ExecuteRequestInput>,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
-pub struct ExecuteRequestInput {
-    pub intent: String,
-    pub payload: ExecuteRequestInputPayload,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
-pub struct ExecuteRequestInputPayload {
-    pub commands: Vec<Command>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
