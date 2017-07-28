@@ -10,8 +10,25 @@ pub struct Light {
     pub id: String,
     pub name: String,
     pub status: LightStatus,
+    pub available_light_modes: Vec<LightMode>,
     pub type_: LightType,
     pub mote: mote::Mote,
+}
+
+pub enum LightMode {
+    OnOff,
+    Brightness,
+    ColorSpectrum, // TODO: Temparature.
+}
+
+impl LightMode {
+    pub fn name(&self) -> String {
+        match self {
+            &LightMode::OnOff => "action.devices.traits.OnOff".to_string(),
+            &LightMode::Brightness => "action.devices.traits.Brightness".to_string(),
+            &LightMode::ColorSpectrum => "action.devices.traits.ColorSpectrum".to_string(),
+        }
+    }
 }
 
 pub enum LightType {
