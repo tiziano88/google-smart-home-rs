@@ -1,8 +1,6 @@
 extern crate mote;
 extern crate rgb;
 
-use std::process::Command;
-
 pub enum Device {
     Light(Light),
     Thermostat(Thermostat),
@@ -25,9 +23,9 @@ pub enum LightType {
 impl LightType {
     pub fn name(&self) -> String {
         match self {
-            Light => "action.devices.types.LIGHT".to_string(),
-            Outlet => "action.devices.types.OUTLET".to_string(),
-            Switch => "action.devices.types.SWITCH".to_string(),
+            &LightType::Light => "action.devices.types.LIGHT".to_string(),
+            &LightType::Outlet => "action.devices.types.OUTLET".to_string(),
+            &LightType::Switch => "action.devices.types.SWITCH".to_string(),
         }
     }
 }

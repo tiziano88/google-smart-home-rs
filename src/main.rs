@@ -223,7 +223,7 @@ impl Handler for Hub {
 }
 
 fn main() {
-    let mut hub = Hub {
+    let hub = Hub {
         devices: Mutex::new(vec![Device::Light(Light {
                                      id: "11".to_string(),
                                      name: "TV lights".to_string(),
@@ -248,8 +248,8 @@ fn main() {
 fn auth_handler(req: &mut Request) -> IronResult<Response> {
     let map = req.get_ref::<params::Params>().unwrap();
 
-    let redirect_uri = map.find(&["response_type"]);
-    let client_id = map.find(&["client_id"]);
+    let _ = map.find(&["response_type"]);
+    let _ = map.find(&["client_id"]);
     let redirect_uri = map.find(&["redirect_uri"]);
     let scope = map.find(&["scope"]);
     let state = map.find(&["state"]);
@@ -279,10 +279,10 @@ fn auth_handler(req: &mut Request) -> IronResult<Response> {
 fn token_handler(req: &mut Request) -> IronResult<Response> {
     let map = req.get_ref::<params::Params>().unwrap();
 
-    let grant_type = map.find(&["grant_type"]);
-    let code = map.find(&["code"]);
-    let redirect_uri = map.find(&["redirect_uri"]);
-    let client_id = map.find(&["client_id"]);
+    let _ = map.find(&["grant_type"]);
+    let _ = map.find(&["code"]);
+    let _ = map.find(&["redirect_uri"]);
+    let _ = map.find(&["client_id"]);
 
     let auth_response = AuthResponse {
         token_type: "bearer".to_string(),
@@ -299,16 +299,16 @@ fn token_handler(req: &mut Request) -> IronResult<Response> {
 fn login_handler(req: &mut Request) -> IronResult<Response> {
     let map = req.get_ref::<params::Params>().unwrap();
 
-    let username = map.find(&["username"]);
-    let password = map.find(&["password"]);
+    let _ = map.find(&["username"]);
+    let _ = map.find(&["password"]);
 
     Ok(Response::with((status::Ok, "login")))
 }
 
-fn index_handler(req: &mut Request) -> IronResult<Response> {
+fn index_handler(_: &mut Request) -> IronResult<Response> {
     Ok(Response::with((status::Ok, "index")))
 }
 
-fn get_action_handler(req: &mut Request) -> IronResult<Response> {
+fn get_action_handler(_: &mut Request) -> IronResult<Response> {
     Ok(Response::with((status::Ok, "get action")))
 }
