@@ -12,7 +12,24 @@ pub struct Light {
     pub id: String,
     pub name: String,
     pub status: LightStatus,
+    pub type_: LightType,
     pub mote: mote::Mote,
+}
+
+pub enum LightType {
+    Light,
+    Outlet,
+    Switch,
+}
+
+impl LightType {
+    pub fn name(&self) -> String {
+        match self {
+            Light => "action.devices.types.LIGHT".to_string(),
+            Outlet => "action.devices.types.OUTLET".to_string(),
+            Switch => "action.devices.types.SWITCH".to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

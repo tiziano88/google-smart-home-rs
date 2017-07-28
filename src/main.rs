@@ -57,7 +57,7 @@ impl Handler for Hub {
                 for light in lights {
                     response.payload.devices.push(SyncResponseDevice {
                         id: light.id.clone(),
-                        type_: "action.devices.types.LIGHT".to_string(),
+                        type_: light.type_.name(),
                         traits: vec!["action.devices.traits.OnOff".to_string(),
                                      "action.devices.traits.Brightness".to_string(),
                                      "action.devices.traits.ColorSpectrum".to_string()],
@@ -180,6 +180,7 @@ fn main() {
                                     id: "11".to_string(),
                                     name: "TV lights".to_string(),
                                     status: LightStatus::default(),
+                                    type_: LightType::Light,
                                     mote: mote::Mote::new("/dev/ttyACM0"),
                                 }]),
     };
