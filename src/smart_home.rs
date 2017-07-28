@@ -98,6 +98,7 @@ pub struct Thermostat {
     pub id: String,
     pub name: String,
     pub available_thermostat_modes: Vec<ThermostatMode>,
+    pub thermostat_temperature_unit: TemperatureUnit,
     pub status: ThermostatStatus,
 }
 
