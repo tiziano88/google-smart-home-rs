@@ -128,6 +128,8 @@ impl Handler for Hub {
                 for device in devices {
                     match device {
                         &Device::Light(ref light) => {
+                            if light.id == input.payload.devices[0].id {
+                            }
                             // TODO
                         }
                         &Device::Thermostat(ref thermostat) => {
