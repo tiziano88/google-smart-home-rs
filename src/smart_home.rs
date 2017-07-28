@@ -3,6 +3,11 @@ extern crate rgb;
 
 use std::process::Command;
 
+pub enum Device {
+    Light(Light),
+    Thermostat(Thermostat),
+}
+
 pub struct Light {
     pub id: String,
     pub name: String,
@@ -70,4 +75,53 @@ impl Light {
         };
         self.mote.write(&[c; 16 * 4]);
     }
+}
+
+pub struct Thermostat {
+    pub id: String,
+    pub name: String,
+    pub available_thermostat_modes: Vec<ThermostatMode>,
+    pub status: ThermostatStatus,
+}
+
+#[derive(Debug, Clone)]
+pub enum ThermostatMode {
+    Off,
+    Heat,
+    Cool,
+    On,
+    Heatcool,
+}
+
+#[derive(Debug, Clone)]
+pub enum TemperatureUnit {
+    C,
+    F,
+}
+
+#[derive(Debug, Clone)]
+pub struct ThermostatStatus {
+    pub mode: ThermostatMode,
+    pub temperature_setpoint: f32,
+    pub temperature_ambient: f32,
+    pub temperature_setpoint_low: f32,
+    pub temperature_setpoint_high: f32,
+    pub temperature_humidity_ambient: f32,
+}
+
+impl Thermostat {
+    pub fn temperature_setpoint(&mut self, setpoint: f32) {
+        self.status.temperature_setpoint = setpoint;
+    }
+
+    pub fn temperature_set_range(&mut self, setpoint_low: f32, setpoint_high: f32) {
+        self.status.temperature_setpoint_low = setpoint_low;
+        self.status.temperature_setpoint_high = setpoint_high;
+    }
+
+    pub fn thermostat_set_mode(&mut self, mode: ThermostatMode) {
+        self.status.mode = mode;
+    }
+
+    fn output(&mut self) {}
 }
