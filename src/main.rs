@@ -119,15 +119,15 @@ impl Handler for Hub {
                                         .devices
                                         .insert(light.id.clone(),
                                                 DeviceStates {
-                                                    online: true,
-                                                    on: light_status.on,
-                                                    brightness: light_status.brightness,
-                                                    color: Color {
+                                                    online: Some(true),
+                                                    on: Some(light_status.on),
+                                                    brightness: Some(light_status.brightness),
+                                                    color: Some(Color {
                                                         name: None,
                                                         temperature: None,
                                                         spectrum_rgb:
                                                             Some(light_status.spectrum_rgb),
-                                                    },
+                                                    }),
                                                 });
                                 }
                                 &Device::Thermostat(ref thermostat) => {
@@ -189,14 +189,14 @@ impl Handler for Hub {
                                             ids: vec![light.id.clone()],
                                             status: "SUCCESS".to_string(),
                                             states: DeviceStates {
-                                                online: true,
-                                                on: light.status.on,
-                                                brightness: light.status.brightness,
-                                                color: Color {
+                                                online: Some(true),
+                                                on: Some(light.status.on),
+                                                brightness: Some(light.status.brightness),
+                                                color: Some(Color {
                                                     name: None,
                                                     temperature: None,
                                                     spectrum_rgb: Some(light.status.spectrum_rgb),
-                                                },
+                                                }),
                                             },
                                         });
                                     }

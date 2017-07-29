@@ -66,7 +66,7 @@ pub struct QueryResponsePayload {
     pub devices: BTreeMap<String, DeviceStates>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Command {
     pub devices: Vec<RequestDevice>,
     pub execution: Vec<Execution>,
@@ -77,13 +77,13 @@ pub struct RequestDevice {
     pub id: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Execution {
     pub command: String,
     pub params: Params,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Params {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub on: Option<bool>,
@@ -91,14 +91,30 @@ pub struct Params {
     pub brightness: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub color: Option<Color>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "thermostatTemperatureSetpoint")]
+    pub thermostat_temperature_setpoint: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "thermostatTemperatureSetpointLow")]
+    pub thermostat_temperature_setpoint_low: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "thermostatTemperatureSetpointHigh")]
+    pub thermostat_temperature_setpoint_high: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "thermostatMode")]
+    pub thermostat_mode: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct DeviceStates {
-    pub online: bool,
-    pub on: bool,
-    pub brightness: u64,
-    pub color: Color,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub online: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub on: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub brightness: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub color: Option<Color>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
@@ -138,20 +154,20 @@ pub struct ExecuteResponseCommand {
     pub states: DeviceStates,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ActionRequest {
     #[serde(rename = "requestId")]
     pub request_id: String,
     pub inputs: Vec<ActionRequestInput>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ActionRequestInput {
     pub intent: String,
     pub payload: Option<ActionRequestPayload>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ActionRequestPayload {
     #[serde(default)]
     pub devices: Vec<RequestDevice>,
@@ -159,7 +175,7 @@ pub struct ActionRequestPayload {
     pub commands: Vec<Command>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct AuthResponse {
     pub token_type: String,
     pub access_token: String,
