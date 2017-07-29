@@ -113,22 +113,23 @@ impl Handler for Hub {
                         for device in devices {
                             match device {
                                 &Device::Light(ref light) => {
-                                    if light.id == request_device.id {}
-                                    let light_status = &light.status;
-                                    response.payload
-                                        .devices
-                                        .insert(light.id.clone(),
-                                                DeviceStates {
-                                                    online: Some(true),
-                                                    on: Some(light_status.on),
-                                                    brightness: Some(light_status.brightness),
-                                                    color: Some(Color {
-                                                        name: None,
-                                                        temperature: None,
-                                                        spectrum_rgb:
-                                                            Some(light_status.spectrum_rgb),
-                                                    }),
-                                                });
+                                    if light.id == request_device.id {
+                                        let light_status = &light.status;
+                                        response.payload
+                                            .devices
+                                            .insert(light.id.clone(),
+                                                    DeviceStates {
+                                                        online: Some(true),
+                                                        on: Some(light_status.on),
+                                                        brightness: Some(light_status.brightness),
+                                                        color: Some(Color {
+                                                            name: None,
+                                                            temperature: None,
+                                                            spectrum_rgb:
+                                                                Some(light_status.spectrum_rgb),
+                                                        }),
+                                                    });
+                                    }
                                 }
                                 &Device::Thermostat(ref thermostat) => {
                                     // TODO
