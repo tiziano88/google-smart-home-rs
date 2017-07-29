@@ -142,7 +142,6 @@ impl Handler for Hub {
                     }
                 }
 
-
                 let res = serde_json::to_string(&response).unwrap_or("".to_string());
                 println!("action_response: {:?}", res);
                 let mut rsp = Response::with((status::Ok, res));
@@ -163,50 +162,48 @@ impl Handler for Hub {
                         println!("command: {:?}", command);
                         for execution in &command.execution {
                             println!("execution: {:?}", execution);
-                            let ref mut devices = *self.devices.lock().unwrap();
-                            for device in devices {
-                                match device {
-                                    &mut Device::Light(ref mut light) => {
-                                        if let Some(s) = execution.params.on {
-                                            light.set_on(s);
-                                        }
-                                        if let Some(s) = execution.params.brightness {
-                                            light.set_brightness(s);
-                                        }
-                                        if let Some(ref s) = execution.params.color {
-                                            if let Some(s) = s.spectrum_rgb {
-                                                light.set_spectrum_rgb(s);
+                            for request_device in &command.devices {
+                                println!("request_device: {:?}", request_device);
+                                let ref mut devices = *self.devices.lock().unwrap();
+                                for device in devices {
+                                    match device {
+                                        &mut Device::Light(ref mut light) => {
+                                            if light.id == request_device.id {
+                                                if let Some(s) = execution.params.on {
+                                                    light.set_on(s);
+                                                }
+                                                if let Some(s) = execution.params.brightness {
+                                                    light.set_brightness(s);
+                                                }
+                                                if let Some(ref s) = execution.params.color {
+                                                    if let Some(s) = s.spectrum_rgb {
+                                                        light.set_spectrum_rgb(s);
+                                                    }
+                                                }
+                                                response.payload
+                                                    .commands
+                                                    .push(ExecuteResponseCommand {
+                                                        ids: vec![light.id.clone()],
+                                                        status: "SUCCESS".to_string(),
+                                                        states: Params {
+                                                            online: Some(true),
+                                                            on: Some(light.status.on),
+                                                            brightness: Some(light.status
+                                                                .brightness),
+                                                            color: Some(Color {
+                                                                name: None,
+                                                                temperature: None,
+                                                                spectrum_rgb: Some(light.status
+                                                                    .spectrum_rgb),
+                                                            }),
+                                                            ..Params::default()
+                                                        },
+                                                    });
                                             }
                                         }
-                                    }
-                                    &mut Device::Thermostat(ref thermostat) => {}
-                                }
-                            }
-                        }
-                        for request_device in &command.devices {
-                            println!("device: {:?}", request_device);
-                            let ref devices = *self.devices.lock().unwrap();
-                            for device in devices {
-                                match device {
-                                    &Device::Light(ref light) => {
-                                        response.payload.commands.push(ExecuteResponseCommand {
-                                            ids: vec![light.id.clone()],
-                                            status: "SUCCESS".to_string(),
-                                            states: Params {
-                                                online: Some(true),
-                                                on: Some(light.status.on),
-                                                brightness: Some(light.status.brightness),
-                                                color: Some(Color {
-                                                    name: None,
-                                                    temperature: None,
-                                                    spectrum_rgb: Some(light.status.spectrum_rgb),
-                                                }),
-                                                ..Params::default()
-                                            },
-                                        });
-                                    }
-                                    &Device::Thermostat(ref thermostat) => {
-                                        // TODO
+                                        &mut Device::Thermostat(ref thermostat) => {
+                                            // TODO
+                                        }
                                     }
                                 }
                             }

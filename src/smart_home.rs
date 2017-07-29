@@ -6,6 +6,15 @@ pub enum Device {
     Thermostat(Thermostat),
 }
 
+impl Device {
+    pub fn id(&self) -> &str {
+        match self {
+            &Device::Light(ref light) => &light.id,
+            &Device::Thermostat(ref thermostat) => &thermostat.id,
+        }
+    }
+}
+
 pub struct Light {
     pub id: String,
     pub name: String,
