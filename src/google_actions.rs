@@ -83,6 +83,7 @@ pub struct Execution {
     pub params: Params,
 }
 
+// TODO: Imple From and To for specific Device instances.
 #[derive(Serialize, Deserialize, Default, Debug, PartialEq)]
 pub struct Params {
     #[serde(skip_serializing_if = "Option::is_none")]
