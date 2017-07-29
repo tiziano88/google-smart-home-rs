@@ -40,30 +40,30 @@ pub struct DeviceInfo {
     pub sw_version: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct SyncResponse {
     #[serde(rename = "requestId")]
     pub request_id: String,
     pub payload: SyncResponsePayload,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct SyncResponsePayload {
     #[serde(rename = "agentUserId")]
     pub agent_user_id: String,
     pub devices: Vec<SyncResponseDevice>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct QueryResponse {
     #[serde(rename = "requestId")]
     pub request_id: String,
     pub payload: QueryResponsePayload,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct QueryResponsePayload {
-    pub devices: BTreeMap<String, DeviceStates>,
+    pub devices: BTreeMap<String, Params>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -72,7 +72,7 @@ pub struct Command {
     pub execution: Vec<Execution>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct RequestDevice {
     pub id: String,
 }
@@ -83,8 +83,10 @@ pub struct Execution {
     pub params: Params,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Default, Debug, PartialEq)]
 pub struct Params {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub online: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub on: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -105,19 +107,7 @@ pub struct Params {
     pub thermostat_mode: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
-pub struct DeviceStates {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub online: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub on: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub brightness: Option<u64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub color: Option<Color>,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Color {
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -131,14 +121,14 @@ pub struct Color {
     pub spectrum_rgb: Option<u64>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ExecuteResponse {
     #[serde(rename = "requestId")]
     pub request_id: String,
     pub payload: ExecuteResponsePayload,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ExecuteResponsePayload {
     #[serde(rename = "errorCode")]
     pub error_code: Option<String>,
@@ -147,11 +137,11 @@ pub struct ExecuteResponsePayload {
     pub commands: Vec<ExecuteResponseCommand>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ExecuteResponseCommand {
     pub ids: Vec<String>,
     pub status: String,
-    pub states: DeviceStates,
+    pub states: Params,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]

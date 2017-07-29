@@ -118,7 +118,7 @@ impl Handler for Hub {
                                         response.payload
                                             .devices
                                             .insert(light.id.clone(),
-                                                    DeviceStates {
+                                                    Params {
                                                         online: Some(true),
                                                         on: Some(light_status.on),
                                                         brightness: Some(light_status.brightness),
@@ -128,6 +128,7 @@ impl Handler for Hub {
                                                             spectrum_rgb:
                                                                 Some(light_status.spectrum_rgb),
                                                         }),
+                                                        ..Params::default()
                                                     });
                                     }
                                 }
@@ -161,11 +162,11 @@ impl Handler for Hub {
                     for command in &p.commands {
                         println!("command: {:?}", command);
                         for execution in &command.execution {
+                            println!("execution: {:?}", execution);
                             let ref mut devices = *self.devices.lock().unwrap();
                             for device in devices {
                                 match device {
                                     &mut Device::Light(ref mut light) => {
-                                        println!("execution: {:?}", execution);
                                         if let Some(s) = execution.params.on {
                                             light.set_on(s);
                                         }
@@ -191,7 +192,7 @@ impl Handler for Hub {
                                         response.payload.commands.push(ExecuteResponseCommand {
                                             ids: vec![light.id.clone()],
                                             status: "SUCCESS".to_string(),
-                                            states: DeviceStates {
+                                            states: Params {
                                                 online: Some(true),
                                                 on: Some(light.status.on),
                                                 brightness: Some(light.status.brightness),
@@ -200,6 +201,7 @@ impl Handler for Hub {
                                                     temperature: None,
                                                     spectrum_rgb: Some(light.status.spectrum_rgb),
                                                 }),
+                                                ..Params::default()
                                             },
                                         });
                                     }
