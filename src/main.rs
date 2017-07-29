@@ -132,7 +132,9 @@ impl Handler for Hub {
                                     }
                                 }
                                 &Device::Thermostat(ref thermostat) => {
-                                    // TODO
+                                    if thermostat.id == request_device.id {
+                                        // TODO
+                                    }
                                 }
                             }
                         }
