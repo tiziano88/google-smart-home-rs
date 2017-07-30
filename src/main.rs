@@ -256,7 +256,7 @@ fn main() {
     let mut control = Router::new();
     control.get("/auth", oauth.auth, "auth")
         .post("/token", oauth.token, "token")
-        .get("/login", login_handler, "login")
+        .get("/login", oauth.login, "login")
         .post("/action", hub, "post action")
         .get("/action", get_action_handler, "get action")
         .get("/", index_handler, "index");
@@ -264,15 +264,6 @@ fn main() {
     Iron::new(control)
         .http("0.0.0.0:1234")
         .unwrap();
-}
-
-fn login_handler(req: &mut Request) -> IronResult<Response> {
-    let map = req.get_ref::<params::Params>().unwrap();
-
-    let _ = map.find(&["username"]);
-    let _ = map.find(&["password"]);
-
-    Ok(Response::with((status::Ok, "login")))
 }
 
 fn index_handler(_: &mut Request) -> IronResult<Response> {

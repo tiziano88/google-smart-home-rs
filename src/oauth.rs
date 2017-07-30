@@ -14,6 +14,7 @@ use google_actions::*;
 pub struct OAuth {
     pub auth: OAuthAuth,
     pub token: OAuthToken,
+    pub login: OAuthLogin,
 }
 
 impl OAuth {
@@ -21,6 +22,7 @@ impl OAuth {
         OAuth {
             auth: OAuthAuth {},
             token: OAuthToken {},
+            login: OAuthLogin {},
         }
     }
 }
@@ -81,5 +83,18 @@ impl Handler for OAuthToken {
         let res = serde_json::to_string(&auth_response).unwrap_or("".to_string());
 
         Ok(Response::with((status::Ok, res)))
+    }
+}
+
+pub struct OAuthLogin {}
+
+impl Handler for OAuthLogin {
+    fn handle(&self, req: &mut Request) -> IronResult<Response> {
+        let map = req.get_ref::<params::Params>().unwrap();
+
+        let _ = map.find(&["username"]);
+        let _ = map.find(&["password"]);
+
+        Ok(Response::with((status::Ok, "login")))
     }
 }
