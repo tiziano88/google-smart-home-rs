@@ -241,5 +241,7 @@ impl Thermostat {
         self.output();
     }
 
-    fn output(&mut self) {}
+    fn output(&mut self) {
+        // TODO
+    }
 }
