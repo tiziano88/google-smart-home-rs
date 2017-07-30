@@ -19,17 +19,19 @@ use std::sync::Mutex;
 use iron::headers::ContentType;
 use iron::middleware::Handler;
 use iron::modifiers::Redirect;
-use iron::prelude::{Iron, IronResult, Request, Response};
+use iron::prelude::{IronResult, Request, Response};
 use iron::prelude::*;
 use iron::status;
 use router::Router;
 use url::Url;
 
 mod google_actions;
-use google_actions::*;
+use google_actions::{ExecuteResponse, ExecuteResponseCommand, ExecuteResponsePayload,
+                     QueryResponse, QueryResponsePayload, Name, SyncResponse, SyncResponseDevice,
+                     SyncResponsePayload, ActionRequest};
 
 mod smart_home;
-use smart_home::*;
+use smart_home::{LightMode, LightType, LightStatus, Light, Device, ThermostatMode};
 
 mod oauth;
 

@@ -4,7 +4,7 @@ extern crate serde_json;
 
 use iron::middleware::Handler;
 use iron::modifiers::Redirect;
-use iron::prelude::{Iron, IronResult, Request, Response};
+use iron::prelude::{IronResult, Request, Response};
 use iron::prelude::*;
 use iron::status;
 use url::Url;
