@@ -9,6 +9,7 @@ use google_actions;
 pub enum Device {
     Light(Light),
     Thermostat(Thermostat),
+    Scene(Scene),
 }
 
 impl Device {
@@ -16,6 +17,7 @@ impl Device {
         match self {
             &Device::Light(ref light) => &light.id,
             &Device::Thermostat(ref thermostat) => &thermostat.id,
+            &Device::Scene(ref scene) => &scene.id,
         }
     }
 }
@@ -258,4 +260,14 @@ impl Thermostat {
     fn output(&mut self) {
         // TODO
     }
+}
+
+pub struct Scene {
+    pub id: String,
+    pub name: String,
+    pub reversible: bool,
+}
+
+impl Scene {
+    pub fn activate_scene(&mut self, deactivate: bool) {}
 }

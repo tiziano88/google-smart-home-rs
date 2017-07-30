@@ -18,6 +18,15 @@ pub struct SyncResponseDevice {
     #[serde(rename = "deviceInfo")]
     #[serde(skip)]
     pub device_info: Option<DeviceInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub attributes: Option<SyncResponseDeviceAttributes>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+pub struct SyncResponseDeviceAttributes {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "sceneReversible")]
+    pub scene_reversible: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]

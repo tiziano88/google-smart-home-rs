@@ -79,6 +79,7 @@ impl Handler for Hub {
                                 device_info: None,
                                 room_hint: None,
                                 structure_hint: None,
+                                attributes: None,
                             })
                         }
                         &Device::Thermostat(ref thermostat) => {
@@ -97,6 +98,24 @@ impl Handler for Hub {
                                 device_info: None,
                                 room_hint: None,
                                 structure_hint: None,
+                                attributes: None,
+                            })
+                        }
+                        &Device::Scene(ref scene) => {
+                            response.payload.devices.push(SyncResponseDevice {
+                                id: scene.id.clone(),
+                                type_: "action.devices.types.SCENE".to_string(),
+                                traits: vec!["action.devices.traits.Scene".to_string()],
+                                name: Name {
+                                    default_name: vec![scene.name.to_string()],
+                                    name: Some(scene.name.clone()),
+                                    nicknames: vec![],
+                                },
+                                will_report_state: false,
+                                device_info: None,
+                                room_hint: None,
+                                structure_hint: None,
+                                attributes: None,
                             })
                         }
                     }
@@ -130,6 +149,7 @@ impl Handler for Hub {
                                         // TODO
                                     }
                                 }
+                                &Device::Scene(ref scene) => {}
                             }
                         }
                     }
@@ -211,6 +231,7 @@ impl Handler for Hub {
                                                     });
                                             }
                                         }
+                                        &mut Device::Scene(ref mut scene) => {}
                                     }
                                 }
                             }
