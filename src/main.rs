@@ -190,6 +190,13 @@ impl Handler for Hub {
                                                          .thermostat_temperature_setpoint_high) {
                                                     thermostat.temperature_set_range(low, high);
                                                 }
+                                                if let Some(ref mode) = execution.params
+                                                    .thermostat_mode {
+                                                    if let Some(mode) =
+                                                        ThermostatMode::from_name(mode) {
+                                                        thermostat.thermostat_set_mode(mode);
+                                                    }
+                                                }
                                                 response.payload
                                                     .commands
                                                     .push(ExecuteResponseCommand {
