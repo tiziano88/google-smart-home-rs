@@ -19,6 +19,7 @@ use std::sync::Mutex;
 use iron::headers::ContentType;
 use iron::middleware::Handler;
 use iron::modifiers::Redirect;
+use iron::prelude::{Iron, IronResult, Request, Response};
 use iron::prelude::*;
 use iron::status;
 use router::Router;
