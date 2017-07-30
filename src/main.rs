@@ -178,7 +178,7 @@ impl Handler for Hub {
                                                     });
                                             }
                                         }
-                                        &mut Device::Thermostat(ref thermostat) => {
+                                        &mut Device::Thermostat(ref _) => {
                                             // TODO
                                         }
                                     }
