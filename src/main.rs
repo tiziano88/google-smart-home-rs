@@ -13,8 +13,8 @@ extern crate serde_derive;
 #[macro_use]
 extern crate maplit;
 
-use std::collections::BTreeMap;
 use std::io::Read;
+use std::sync::Mutex;
 
 use iron::headers::ContentType;
 use iron::middleware::Handler;
@@ -23,7 +23,6 @@ use iron::prelude::*;
 use iron::status;
 use router::Router;
 use url::Url;
-use std::sync::Mutex;
 
 mod google_actions;
 use google_actions::*;

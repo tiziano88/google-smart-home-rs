@@ -193,6 +193,15 @@ pub enum TemperatureUnit {
     F,
 }
 
+impl TemperatureUnit {
+    pub fn name(&self) -> String {
+        match self {
+            &TemperatureUnit::C => "C".to_string(),
+            &TemperatureUnit::F => "F".to_string(),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct ThermostatStatus {
     pub mode: ThermostatMode,
