@@ -182,6 +182,17 @@ impl ThermostatMode {
             &ThermostatMode::Heatcool => "Heatcool".to_string(),
         }
     }
+
+    pub fn from_name(n: &str) -> Option<ThermostatMode> {
+        match n {
+            "Off" => Some(ThermostatMode::Off),
+            "Heat" => Some(ThermostatMode::Heat),
+            "Cool" => Some(ThermostatMode::Cool),
+            "On" => Some(ThermostatMode::On),
+            "Heatcool" => Some(ThermostatMode::Heatcool),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
