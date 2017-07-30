@@ -115,7 +115,6 @@ impl Handler for Hub {
                             match device {
                                 &Device::Light(ref light) => {
                                     if light.id == request_device.id {
-                                        let light_status = &light.status;
                                         response.payload
                                             .devices
                                             .insert(light.id.clone(), light.status.clone().into());
@@ -178,8 +177,27 @@ impl Handler for Hub {
                                                     });
                                             }
                                         }
-                                        &mut Device::Thermostat(ref _) => {
-                                            // TODO
+                                        &mut Device::Thermostat(ref mut thermostat) => {
+                                            if thermostat.id == request_device.id {
+                                                if let Some(s) = execution.params
+                                                    .thermostat_temperature_setpoint {
+                                                    thermostat.temperature_setpoint(s);
+                                                }
+                                                if let (Some(low), Some(high)) =
+                                                    (execution.params
+                                                         .thermostat_temperature_setpoint_low,
+                                                     execution.params
+                                                         .thermostat_temperature_setpoint_high) {
+                                                    thermostat.temperature_set_range(low, high);
+                                                }
+                                                response.payload
+                                                    .commands
+                                                    .push(ExecuteResponseCommand {
+                                                        ids: vec![thermostat.id.clone()],
+                                                        status: "SUCCESS".to_string(),
+                                                        states: thermostat.status.clone().into(),
+                                                    });
+                                            }
                                         }
                                     }
                                 }

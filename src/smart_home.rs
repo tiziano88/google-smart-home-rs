@@ -175,6 +175,18 @@ pub enum ThermostatMode {
     Heatcool,
 }
 
+impl ThermostatMode {
+    pub fn name(&self) -> String {
+        match self {
+            &ThermostatMode::Off => "Off".to_string(),
+            &ThermostatMode::Heat => "Heat".to_string(),
+            &ThermostatMode::Cool => "Cool".to_string(),
+            &ThermostatMode::On => "On".to_string(),
+            &ThermostatMode::Heatcool => "Heatcool".to_string(),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum TemperatureUnit {
     C,
@@ -191,18 +203,33 @@ pub struct ThermostatStatus {
     pub temperature_humidity_ambient: f32,
 }
 
+impl Into<google_actions::Params> for ThermostatStatus {
+    fn into(self) -> google_actions::Params {
+        google_actions::Params {
+            thermostat_mode: Some(self.mode.name()),
+            thermostat_temperature_setpoint: Some(self.temperature_setpoint),
+            thermostat_temperature_setpoint_low: Some(self.temperature_setpoint_low),
+            thermostat_temperature_setpoint_high: Some(self.temperature_setpoint_high),
+            ..google_actions::Params::default()
+        }
+    }
+}
+
 impl Thermostat {
     pub fn temperature_setpoint(&mut self, setpoint: f32) {
         self.status.temperature_setpoint = setpoint;
+        self.output();
     }
 
     pub fn temperature_set_range(&mut self, setpoint_low: f32, setpoint_high: f32) {
         self.status.temperature_setpoint_low = setpoint_low;
         self.status.temperature_setpoint_high = setpoint_high;
+        self.output();
     }
 
     pub fn thermostat_set_mode(&mut self, mode: ThermostatMode) {
         self.status.mode = mode;
+        self.output();
     }
 
     fn output(&mut self) {}
