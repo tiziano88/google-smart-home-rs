@@ -14,6 +14,7 @@ extern crate serde_derive;
 extern crate maplit;
 
 use std::io::Read;
+use std::str::FromStr;
 use std::sync::Mutex;
 
 use iron::headers::ContentType;
@@ -64,10 +65,10 @@ impl Handler for Hub {
                         &Device::Light(ref light) => {
                             response.payload.devices.push(SyncResponseDevice {
                                 id: light.id.clone(),
-                                type_: light.type_.name(),
+                                type_: light.type_.to_string(),
                                 traits: light.available_light_modes
                                     .iter()
-                                    .map(LightMode::name)
+                                    .map(LightMode::to_string)
                                     .collect(),
                                 name: Name {
                                     default_name: vec![light.name.to_string()],
@@ -196,8 +197,8 @@ impl Handler for Hub {
                                                 }
                                                 if let Some(ref mode) = execution.params
                                                     .thermostat_mode {
-                                                    if let Some(mode) =
-                                                        ThermostatMode::from_name(mode) {
+                                                    if let Ok(mode) =
+                                                        ThermostatMode::from_str(mode) {
                                                         thermostat.thermostat_set_mode(mode);
                                                     }
                                                 }
