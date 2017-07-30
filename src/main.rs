@@ -5,6 +5,7 @@ extern crate serde;
 extern crate serde_json;
 extern crate url;
 extern crate mote;
+extern crate rgb;
 
 #[macro_use]
 extern crate serde_derive;
@@ -165,7 +166,7 @@ impl Handler for Hub {
                                                 }
                                                 if let Some(ref s) = execution.params.color {
                                                     if let Some(s) = s.spectrum_rgb {
-                                                        // light.set_color(s);
+                                                        light.set_color(to_rgb(s));
                                                     }
                                                 }
                                                 response.payload
@@ -198,6 +199,14 @@ impl Handler for Hub {
         let mut rsp = Response::with((status::Ok, "ACTION"));
         rsp.headers.set(ContentType::json());
         Ok(rsp)
+    }
+}
+
+fn to_rgb(c: u64) -> rgb::RGB8 {
+    rgb::RGB8 {
+        r: ((c & 0xFF0000) >> 16) as u8,
+        g: ((c & 0x00FF00) >> 8) as u8,
+        b: ((c & 0x0000FF) >> 0) as u8,
     }
 }
 
