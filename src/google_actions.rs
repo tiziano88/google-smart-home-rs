@@ -91,7 +91,7 @@ pub struct Params {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub on: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub brightness: Option<u64>,
+    pub brightness: Option<u8>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub color: Option<Color>,
     #[serde(skip_serializing_if = "Option::is_none")]

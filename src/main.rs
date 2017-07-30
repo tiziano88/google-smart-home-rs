@@ -117,19 +117,7 @@ impl Handler for Hub {
                                         let light_status = &light.status;
                                         response.payload
                                             .devices
-                                            .insert(light.id.clone(),
-                                                    Params {
-                                                        online: Some(true),
-                                                        on: Some(light_status.on),
-                                                        brightness: Some(light_status.brightness),
-                                                        color: Some(Color {
-                                                            name: None,
-                                                            temperature: None,
-                                                            spectrum_rgb:
-                                                                Some(light_status.spectrum_rgb),
-                                                        }),
-                                                        ..Params::default()
-                                                    });
+                                            .insert(light.id.clone(), light.status.clone().into());
                                     }
                                 }
                                 &Device::Thermostat(ref thermostat) => {
@@ -177,7 +165,7 @@ impl Handler for Hub {
                                                 }
                                                 if let Some(ref s) = execution.params.color {
                                                     if let Some(s) = s.spectrum_rgb {
-                                                        light.set_spectrum_rgb(s);
+                                                        // light.set_color(s);
                                                     }
                                                 }
                                                 response.payload
@@ -185,19 +173,7 @@ impl Handler for Hub {
                                                     .push(ExecuteResponseCommand {
                                                         ids: vec![light.id.clone()],
                                                         status: "SUCCESS".to_string(),
-                                                        states: Params {
-                                                            online: Some(true),
-                                                            on: Some(light.status.on),
-                                                            brightness: Some(light.status
-                                                                .brightness),
-                                                            color: Some(Color {
-                                                                name: None,
-                                                                temperature: None,
-                                                                spectrum_rgb: Some(light.status
-                                                                    .spectrum_rgb),
-                                                            }),
-                                                            ..Params::default()
-                                                        },
+                                                        states: light.status.clone().into(),
                                                     });
                                             }
                                         }

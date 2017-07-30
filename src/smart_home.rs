@@ -1,6 +1,8 @@
 extern crate mote;
 extern crate rgb;
 
+use google_actions;
+
 pub enum Device {
     Light(Light),
     Thermostat(Thermostat),
@@ -59,8 +61,33 @@ impl LightType {
 #[derive(Debug, Clone)]
 pub struct LightStatus {
     pub on: bool,
-    pub brightness: u64,
-    pub spectrum_rgb: u64,
+    pub brightness: u8,
+    pub color: rgb::RGB8,
+}
+
+impl From<google_actions::Params> for LightStatus {
+    fn from(params: google_actions::Params) -> LightStatus {
+        LightStatus {
+            on: params.on.unwrap_or(false),
+            brightness: params.brightness.unwrap_or(100),
+            color: to_rgb(params.color.unwrap().spectrum_rgb.unwrap_or(0)),
+        }
+    }
+}
+
+impl Into<google_actions::Params> for LightStatus {
+    fn into(self) -> google_actions::Params {
+        google_actions::Params {
+            on: Some(self.on),
+            brightness: Some(self.brightness),
+            color: Some(google_actions::Color {
+                name: None,
+                temperature: None,
+                spectrum_rgb: Some(from_rgb(&self.color)),
+            }),
+            ..google_actions::Params::default()
+        }
+    }
 }
 
 impl Default for LightStatus {
@@ -68,9 +95,25 @@ impl Default for LightStatus {
         LightStatus {
             on: false,
             brightness: 100,
-            spectrum_rgb: 0xFFFFFF,
+            color: rgb::RGB8 {
+                r: 0xFF,
+                g: 0xFF,
+                b: 0xFF,
+            },
         }
     }
+}
+
+fn to_rgb(c: u64) -> rgb::RGB8 {
+    rgb::RGB8 {
+        r: ((c & 0xFF0000) >> 16) as u8,
+        g: ((c & 0x00FF00) >> 8) as u8,
+        b: ((c & 0x0000FF) >> 0) as u8,
+    }
+}
+
+fn from_rgb(c: &rgb::RGB8) -> u64 {
+    (c.r as u64) << 16 | (c.g as u64) << 8 | (c.b as u64) << 0
 }
 
 impl Light {
@@ -81,7 +124,7 @@ impl Light {
         &self.status
     }
 
-    pub fn set_brightness(&mut self, s: u64) -> &LightStatus {
+    pub fn set_brightness(&mut self, s: u8) -> &LightStatus {
         println!("set brightness to: {:?}", s);
         self.status.brightness = s;
         self.status.on = true;
@@ -89,26 +132,23 @@ impl Light {
         &self.status
     }
 
-    pub fn set_spectrum_rgb(&mut self, s: u64) -> &LightStatus {
-        println!("set spectrum_rgb to: {:?}", s);
-        self.status.spectrum_rgb = s;
+    pub fn set_color(&mut self, c: rgb::RGB8) -> &LightStatus {
+        println!("set color to: {:?}", c);
+        self.status.color = c;
         self.status.on = true;
         self.output();
         &self.status
     }
 
     fn output(&mut self) {
-        let r = (self.status.spectrum_rgb & 0xFF0000) >> 16;
-        let g = (self.status.spectrum_rgb & 0x00FF00) >> 8;
-        let b = (self.status.spectrum_rgb & 0x0000FF) >> 0;
         let scale = if self.status.on {
             self.status.brightness
         } else {
             0
         };
-        let scaled_r = (r * scale / 100) as u8;
-        let scaled_g = (g * scale / 100) as u8;
-        let scaled_b = (b * scale / 100) as u8;
+        let scaled_r = (self.status.color.r * scale / 100) as u8;
+        let scaled_g = (self.status.color.g * scale / 100) as u8;
+        let scaled_b = (self.status.color.b * scale / 100) as u8;
         let c = rgb::RGB8 {
             r: scaled_r,
             g: scaled_g,
