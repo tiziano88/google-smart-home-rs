@@ -127,6 +127,8 @@ impl Handler for Hub {
                 println!("action_response: {:?}", res);
                 let mut rsp = Response::with((status::Ok, res));
                 rsp.headers.set(ContentType::json());
+                // For browser access.
+                rsp.headers.set(AccessControlAllowOrigin::Any);
                 return Ok(rsp);
             } else if input.intent == "action.devices.QUERY" {
                 let mut response = QueryResponse {
@@ -161,6 +163,8 @@ impl Handler for Hub {
                 println!("action_response: {:?}", res);
                 let mut rsp = Response::with((status::Ok, res));
                 rsp.headers.set(ContentType::json());
+                // For browser access.
+                rsp.headers.set(AccessControlAllowOrigin::Any);
                 return Ok(rsp);
             } else if input.intent == "action.devices.EXECUTE" {
                 let mut response = ExecuteResponse {
@@ -245,6 +249,8 @@ impl Handler for Hub {
                 println!("action_response: {:?}", res);
                 let mut rsp = Response::with((status::Ok, res));
                 rsp.headers.set(ContentType::json());
+                // For browser access.
+                rsp.headers.set(AccessControlAllowOrigin::Any);
                 return Ok(rsp);
             }
         }
