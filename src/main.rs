@@ -5,6 +5,7 @@ extern crate rgb;
 extern crate router;
 extern crate serde;
 extern crate serde_json;
+extern crate unicase;
 extern crate url;
 
 #[macro_use]
@@ -17,13 +18,14 @@ use std::io::Read;
 use std::str::FromStr;
 use std::sync::Mutex;
 
-use iron::headers::ContentType;
+use iron::headers::{AccessControlAllowHeaders, AccessControlAllowOrigin, ContentType};
 use iron::middleware::Handler;
 use iron::modifiers::Redirect;
 use iron::prelude::{IronResult, Request, Response};
 use iron::prelude::*;
 use iron::status;
 use router::Router;
+use unicase::UniCase;
 use url::Url;
 
 mod google_actions;
@@ -249,6 +251,8 @@ impl Handler for Hub {
 
         let mut rsp = Response::with((status::Ok, "ACTION"));
         rsp.headers.set(ContentType::json());
+        // For browser access.
+        rsp.headers.set(AccessControlAllowOrigin::Any);
         Ok(rsp)
     }
 }
@@ -281,6 +285,7 @@ fn main() {
         .get("/login", oauth.login, "login")
         .post("/action", hub, "post action")
         .get("/action", get_action_handler, "get action")
+        .options("/action", options_action_handler, "get action")
         .get("/", index_handler, "index");
     println!("Listening on port 1234");
     Iron::new(control)
@@ -294,4 +299,11 @@ fn index_handler(_: &mut Request) -> IronResult<Response> {
 
 fn get_action_handler(_: &mut Request) -> IronResult<Response> {
     Ok(Response::with((status::Ok, "get action")))
+}
+
+fn options_action_handler(_: &mut Request) -> IronResult<Response> {
+    let mut rsp = Response::with((status::Ok, "options"));
+    rsp.headers.set(AccessControlAllowOrigin::Any);
+    rsp.headers.set(AccessControlAllowHeaders(vec![UniCase("Content-Type".to_string())]));
+    Ok(rsp)
 }
