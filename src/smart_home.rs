@@ -147,10 +147,10 @@ impl Light {
             self.status.brightness
         } else {
             0
-        };
-        let scaled_r = (self.status.color.r * scale / 100) as u8;
-        let scaled_g = (self.status.color.g * scale / 100) as u8;
-        let scaled_b = (self.status.color.b * scale / 100) as u8;
+        } as u32;
+        let scaled_r = (self.status.color.r as u32 * scale / 100) as u8;
+        let scaled_g = (self.status.color.g as u32 * scale / 100) as u8;
+        let scaled_b = (self.status.color.b as u32 * scale / 100) as u8;
         let c = rgb::RGB8 {
             r: scaled_r,
             g: scaled_g,
