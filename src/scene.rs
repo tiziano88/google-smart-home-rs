@@ -1,11 +1,3 @@
-extern crate mote;
-extern crate rgb;
-
-use std::str::FromStr;
-use std::string::ToString;
-
-use google_actions;
-
 pub struct Scene {
     pub id: String,
     pub name: String,

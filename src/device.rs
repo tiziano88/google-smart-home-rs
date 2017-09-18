@@ -1,19 +1,14 @@
 extern crate mote;
 extern crate rgb;
 
-use std::str::FromStr;
-use std::string::ToString;
-
 use light;
 use thermostat;
 use scene;
 
-use google_actions;
-
 pub enum Device {
     Light(light::Light),
     Thermostat(thermostat::Thermostat),
-    Scene(light::Light),
+    Scene(scene::Scene),
 }
 
 impl Device {

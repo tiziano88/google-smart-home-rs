@@ -1,7 +1,7 @@
 extern crate mote;
 extern crate rgb;
 
-use std::str::FromStr;
+use std::sync::{Arc, Mutex};
 use std::string::ToString;
 
 use google_actions;
@@ -12,7 +12,7 @@ pub struct Light {
     pub status: LightStatus,
     pub available_light_modes: Vec<LightMode>,
     pub type_: LightType,
-    pub mote: mote::Mote,
+    pub mote: Arc<Mutex<mote::Mote>>,
 }
 
 pub enum LightMode {
@@ -140,7 +140,8 @@ impl Light {
             g: scaled_g,
             b: scaled_b,
         };
-        self.mote.write(&[c; 16 * 4]);
+        if let Ok(mut guard) = self.mote.lock() {
+            guard.write(&[c; mote::TOTAL_PIXELS]);
+        }
     }
 }
-
