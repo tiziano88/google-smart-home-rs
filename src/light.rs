@@ -13,6 +13,8 @@ pub struct Light {
     pub available_light_modes: Vec<LightMode>,
     pub type_: LightType,
     pub mote: Arc<Mutex<mote::Mote>>,
+    pub pixel_low: usize,
+    pub pixel_high: usize,
 }
 
 pub enum LightMode {
@@ -141,7 +143,11 @@ impl Light {
             b: scaled_b,
         };
         if let Ok(mut guard) = self.mote.lock() {
-            guard.write(&[c; mote::TOTAL_PIXELS]);
+            let mut pixels = guard.read().clone();
+            for i in self.pixel_low..self.pixel_high {
+                pixels[i] = c;
+            }
+            guard.write(&pixels);
         }
     }
 }

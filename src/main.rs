@@ -298,6 +298,8 @@ fn main() {
                     LightMode::ColorSpectrum,
                 ],
                 mote: mote.clone(),
+                pixel_low: 0,
+                pixel_high: 16,
             }),
             Device::Light(Light {
                 id: "22".to_string(),
@@ -310,6 +312,8 @@ fn main() {
                     LightMode::ColorSpectrum,
                 ],
                 mote: mote.clone(),
+                pixel_low: 16,
+                pixel_high: 32,
             }),
         ]),
     };
