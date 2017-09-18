@@ -33,8 +33,16 @@ use google_actions::{ExecuteResponse, ExecuteResponseCommand, ExecuteResponsePay
                      QueryResponse, QueryResponsePayload, Name, SyncResponse, SyncResponseDevice,
                      SyncResponsePayload, ActionRequest};
 
-mod smart_home;
-use smart_home::{LightMode, LightType, LightStatus, Light, Device, ThermostatMode};
+mod light;
+use light::{LightMode, LightType, LightStatus, Light};
+
+mod thermostat;
+use thermostat::ThermostatMode;
+
+mod scene;
+
+mod device;
+use device::Device;
 
 mod oauth;
 
