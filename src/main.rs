@@ -289,7 +289,7 @@ fn main() {
                                      available_light_modes: vec![LightMode::OnOff,
                                                                  LightMode::Brightness,
                                                                  LightMode::ColorSpectrum],
-                                     mote: mote::Mote::new("/dev/ttyACM0"),
+                                     mote: mote::Mote::new("/dev/ttyACM0", true),
                                  })]),
     };
     let oauth = oauth::OAuth::new();
