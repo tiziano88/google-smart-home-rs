@@ -34,7 +34,7 @@ pub struct Light {
 pub enum LightMode {
     OnOff,
     Brightness,
-    ColorSpectrum, // TODO: Temparature.
+    ColorSpectrum, // TODO: Temperature.
 }
 
 impl ToString for LightMode {
