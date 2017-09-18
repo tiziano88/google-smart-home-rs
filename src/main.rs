@@ -1,9 +1,7 @@
 extern crate iron;
 extern crate mote;
-extern crate params;
 extern crate rgb;
 extern crate router;
-extern crate serde;
 extern crate serde_json;
 extern crate unicase;
 extern crate url;

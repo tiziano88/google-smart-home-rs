@@ -1,6 +1,3 @@
-extern crate mote;
-extern crate rgb;
-
 use std::str::FromStr;
 use std::string::ToString;
 

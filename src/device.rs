@@ -1,6 +1,3 @@
-extern crate mote;
-extern crate rgb;
-
 use light;
 use thermostat;
 use scene;
