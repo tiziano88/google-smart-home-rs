@@ -36,6 +36,7 @@ mod thermostat;
 use thermostat::ThermostatMode;
 
 mod scene;
+use scene::Scene;
 
 mod device;
 use device::Device;
@@ -289,7 +290,7 @@ fn main() {
         devices: Mutex::new(vec![
             Device::Light(Light {
                 id: "11".to_string(),
-                name: "TV lights".to_string(),
+                name: "Bedroom lights".to_string(),
                 status: LightStatus::default(),
                 type_: LightType::Light,
                 available_light_modes: vec![
@@ -303,7 +304,7 @@ fn main() {
             }),
             Device::Light(Light {
                 id: "22".to_string(),
-                name: "TV lights 2".to_string(),
+                name: "Kitchen lights".to_string(),
                 status: LightStatus::default(),
                 type_: LightType::Light,
                 available_light_modes: vec![
@@ -314,6 +315,39 @@ fn main() {
                 mote: mote.clone(),
                 pixel_low: 16,
                 pixel_high: 32,
+            }),
+            Device::Light(Light {
+                id: "33".to_string(),
+                name: "Bathroom lights".to_string(),
+                status: LightStatus::default(),
+                type_: LightType::Light,
+                available_light_modes: vec![
+                    LightMode::OnOff,
+                    LightMode::Brightness,
+                    LightMode::ColorSpectrum,
+                ],
+                mote: mote.clone(),
+                pixel_low: 32,
+                pixel_high: 48,
+            }),
+            Device::Light(Light {
+                id: "44".to_string(),
+                name: "Living Room lights".to_string(),
+                status: LightStatus::default(),
+                type_: LightType::Light,
+                available_light_modes: vec![
+                    LightMode::OnOff,
+                    LightMode::Brightness,
+                    LightMode::ColorSpectrum,
+                ],
+                mote: mote.clone(),
+                pixel_low: 48,
+                pixel_high: 64,
+            }),
+            Device::Scene(Scene {
+                id: "55".to_string(),
+                name: "Party mode".to_string(),
+                reversible: false,
             }),
         ]),
     };
