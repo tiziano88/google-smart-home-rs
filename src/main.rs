@@ -349,10 +349,10 @@ fn main() {
         .opt_str("mote_dev")
         .unwrap_or("/dev/ttyACM0".to_string());
 
-    let l1: Arc<Mutex<color::SolidColor>> = Arc::new(Mutex::new(color::SolidColor { c: BLACK }));
-    let l2: Arc<Mutex<color::SolidColor>> = Arc::new(Mutex::new(color::SolidColor { c: BLACK }));
-    let l3: Arc<Mutex<color::SolidColor>> = Arc::new(Mutex::new(color::SolidColor { c: BLACK }));
-    let l4: Arc<Mutex<color::SolidColor>> = Arc::new(Mutex::new(color::SolidColor { c: BLACK }));
+    let l1: Arc<Mutex<color::ColorFunc>> = Arc::new(Mutex::new(color::SolidColor { c: BLACK }));
+    let l2: Arc<Mutex<color::ColorFunc>> = Arc::new(Mutex::new(color::SolidColor { c: BLACK }));
+    let l3: Arc<Mutex<color::ColorFunc>> = Arc::new(Mutex::new(color::SolidColor { c: BLACK }));
+    let l4: Arc<Mutex<color::ColorFunc>> = Arc::new(Mutex::new(color::SolidColor { c: BLACK }));
 
     thread::spawn(move || {
         let mut b1 = [BLACK; 16];

@@ -1,6 +1,6 @@
 extern crate rgb;
 
-pub trait ColorFunc {
+pub trait ColorFunc: Send {
     fn step(&self, t: u64, current: &[rgb::RGB8; 16]) -> [rgb::RGB8; 16];
     fn color(&self) -> rgb::RGB8;
 }
