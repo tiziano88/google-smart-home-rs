@@ -39,8 +39,8 @@ impl Handler for OAuthAuth {
         let scope = map.find(&["scope"]);
         let state = map.find(&["state"]);
 
-        println!("uri: {:?}", redirect_uri);
-        println!("scope: {:?}", scope);
+        debug!("uri: {:?}", redirect_uri);
+        debug!("scope: {:?}", scope);
 
         let s = match state {
             Some(&params::Value::String(ref x)) => x,

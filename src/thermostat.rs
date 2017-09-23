@@ -85,17 +85,20 @@ impl Into<google_actions::Params> for ThermostatStatus {
 
 impl Thermostat {
     pub fn temperature_setpoint(&mut self, setpoint: f32) {
+        debug!("temperature_setpoint: {:?}", setpoint);
         self.status.temperature_setpoint = setpoint;
         self.output();
     }
 
     pub fn temperature_set_range(&mut self, setpoint_low: f32, setpoint_high: f32) {
+        debug!("temperature_set_range: {:?} - {:?}", setpoint_low, setpoint_high);
         self.status.temperature_setpoint_low = setpoint_low;
         self.status.temperature_setpoint_high = setpoint_high;
         self.output();
     }
 
     pub fn thermostat_set_mode(&mut self, mode: ThermostatMode) {
+        debug!("thermostat_set_mode: {:?}", mode);
         self.status.mode = mode;
         self.output();
     }

@@ -5,5 +5,7 @@ pub struct Scene {
 }
 
 impl Scene {
-    pub fn activate_scene(&mut self, _deactivate: bool) {}
+    pub fn activate_scene(&mut self, _deactivate: bool) {
+        debug!("activate_scene");
+    }
 }

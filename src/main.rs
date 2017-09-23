@@ -1,3 +1,4 @@
+extern crate env_logger;
 extern crate getopts;
 extern crate iron;
 extern crate mote;
@@ -6,6 +7,9 @@ extern crate router;
 extern crate serde_json;
 extern crate unicase;
 extern crate url;
+
+#[macro_use]
+extern crate log;
 
 #[macro_use]
 extern crate serde_derive;
@@ -52,12 +56,12 @@ struct Hub {
 
 impl Handler for Hub {
     fn handle(&self, req: &mut Request) -> IronResult<Response> {
-        println!("hub handler");
+        info!("hub handler");
         let mut body = String::new();
         req.body.read_to_string(&mut body).unwrap();
         let action_request: ActionRequest = serde_json::from_str(&body).unwrap();
 
-        println!("action_request: {:?}", action_request);
+        info!("action_request: {:?}", action_request);
 
         for input in action_request.inputs {
             if input.intent == "action.devices.SYNC" {
@@ -134,7 +138,7 @@ impl Handler for Hub {
                 }
 
                 let res = serde_json::to_string(&response).unwrap_or("".to_string());
-                println!("action_response: {:?}", res);
+                debug!("action_response: {:?}", res);
                 let mut rsp = Response::with((status::Ok, res));
                 rsp.headers.set(ContentType::json());
                 // For browser access.
@@ -171,7 +175,7 @@ impl Handler for Hub {
                 }
 
                 let res = serde_json::to_string(&response).unwrap_or("".to_string());
-                println!("action_response: {:?}", res);
+                debug!("action_response: {:?}", res);
                 let mut rsp = Response::with((status::Ok, res));
                 rsp.headers.set(ContentType::json());
                 // For browser access.
@@ -189,11 +193,11 @@ impl Handler for Hub {
 
                 if let Some(ref p) = input.payload {
                     for command in &p.commands {
-                        println!("command: {:?}", command);
+                        debug!("command: {:?}", command);
                         for execution in &command.execution {
-                            println!("execution: {:?}", execution);
+                            debug!("execution: {:?}", execution);
                             for request_device in &command.devices {
-                                println!("request_device: {:?}", request_device);
+                                debug!("request_device: {:?}", request_device);
                                 let ref mut devices = *self.devices.lock().unwrap();
                                 for device in devices {
                                     match device {
@@ -262,7 +266,7 @@ impl Handler for Hub {
                 }
 
                 let res = serde_json::to_string(&response).unwrap_or("".to_string());
-                println!("action_response: {:?}", res);
+                debug!("action_response: {:?}", res);
                 let mut rsp = Response::with((status::Ok, res));
                 rsp.headers.set(ContentType::json());
                 // For browser access.
@@ -294,6 +298,7 @@ fn main() {
     opts.optopt("", "http_address", "HTTP address to listen on", "ADDRESS");
     opts.optopt("", "mote_dev", "Serial port connecting to Mote", "FILE");
 
+    debug!("parsing args");
     let matches = opts.parse(&args[1..]).unwrap();
     let http_address = matches.opt_str("http_address").unwrap_or("0.0.0.0:1234".to_string());
     let mote_dev = matches.opt_str("mote_dev").unwrap_or("/dev/ttyACM0".to_string());
@@ -388,7 +393,7 @@ fn main() {
         .get("/action", get_action_handler, "get action")
         .options("/action", options_action_handler, "get action")
         .get("/", index_handler, "index");
-    println!("Listening on {}", http_address);
+    info!("Listening on {}", http_address);
     Iron::new(control).http(http_address).unwrap();
 }
 

@@ -109,20 +109,20 @@ fn from_rgb(c: &rgb::RGB8) -> u64 {
 
 impl Light {
     pub fn set_on(&mut self, s: bool) {
-        println!("set on to: {:?}", s);
+        debug!("set_on: {:?}", s);
         self.status.on = s;
         self.output();
     }
 
     pub fn set_brightness(&mut self, s: u8) {
-        println!("set brightness to: {:?}", s);
+        debug!("set_brightness: {:?}", s);
         self.status.brightness = s;
         self.status.on = true;
         self.output();
     }
 
     pub fn set_color(&mut self, c: rgb::RGB8) {
-        println!("set color to: {:?}", c);
+        debug!("set_color: {:?}", c);
         self.status.color = c;
         self.status.on = true;
         self.output();
