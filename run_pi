@@ -3,5 +3,6 @@
 set -x
 set -e
 
-ngrok
+ngrok http -region=eu -subdomain=smartlights 1234
+#ngrok tcp -region=eu -subdomain=smartlights 22
 RUST_LOG=main ~/smartlights

@@ -16,7 +16,7 @@ ngrok http 1234
 ## Setup instructions
 
 1. Compile and run the server with `cargo run`.
-1. Run `ngrok http 1234` and take note of the public HTTPS address, something like `https://xxxxxxxx.ngrok.io`.
+1. Run `ngrok http 1234` and take note of the public HTTPS address, something like `https://xxxxxxxx.ngrok.io`. Alternatively specify the `-subdomain` flag for a persistent endpoint.
 1. Locally modify the `action.json` file, setting the `conversations.automation.url` field to `$URL/action`.
 
 1. Using the [gActions CLI](https://developers.google.com/actions/tools/gactions-cli), run `gactions update --action_package=action.json` `--project=$PROJECT`.

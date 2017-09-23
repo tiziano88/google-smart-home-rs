@@ -40,7 +40,7 @@ mod light;
 use light::{Light, LightMode, LightStatus, LightType};
 
 mod thermostat;
-use thermostat::{Thermostat, ThermostatMode, ThermostatStatus, TemperatureUnit};
+use thermostat::{TemperatureUnit, Thermostat, ThermostatMode, ThermostatStatus};
 
 mod scene;
 use scene::Scene;
@@ -257,7 +257,18 @@ impl Handler for Hub {
                                                 );
                                             }
                                         }
-                                        &mut Device::Scene(ref mut _scene) => {}
+                                        &mut Device::Scene(ref mut scene) => {
+                                            if scene.id == request_device.id {
+                                                scene.activate_scene(false);
+                                                response.payload.commands.push(
+                                                    ExecuteResponseCommand {
+                                                        ids: vec![scene.id.clone()],
+                                                        status: "SUCCESS".to_string(),
+                                                        states: google_actions::Params::default(),
+                                                    },
+                                                );
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -292,6 +303,8 @@ fn to_rgb(c: u64) -> rgb::RGB8 {
 }
 
 fn main() {
+    env_logger::init().unwrap();
+
     let args: Vec<String> = env::args().collect();
 
     let mut opts = Options::new();
@@ -300,12 +313,17 @@ fn main() {
 
     debug!("parsing args");
     let matches = opts.parse(&args[1..]).unwrap();
-    let http_address = matches.opt_str("http_address").unwrap_or("0.0.0.0:1234".to_string());
-    let mote_dev = matches.opt_str("mote_dev").unwrap_or("/dev/ttyACM0".to_string());
+    let http_address = matches
+        .opt_str("http_address")
+        .unwrap_or("0.0.0.0:1234".to_string());
+    let mote_dev = matches
+        .opt_str("mote_dev")
+        .unwrap_or("/dev/ttyACM0".to_string());
 
-    let mote = Arc::new(Mutex::new(mote::Mote::new(&mote_dev, true)));
+    //let mote = Arc::new(Mutex::new(mote::Mote::new(&mote_dev, true)));
     let hub = Hub {
         devices: Mutex::new(vec![
+            /*
             Device::Light(Light {
                 id: "11".to_string(),
                 name: "Bedroom lights".to_string(),
@@ -362,11 +380,13 @@ fn main() {
                 pixel_low: 48,
                 pixel_high: 64,
             }),
+            */
             Device::Scene(Scene {
                 id: "55".to_string(),
                 name: "Party mode".to_string(),
                 reversible: false,
             }),
+            /*
             Device::Thermostat(Thermostat {
                 id: "66".to_string(),
                 name: "Thermo".to_string(),
@@ -381,6 +401,7 @@ fn main() {
                     temperature_humidity_ambient: 50.0,
                 },
             }),
+            */
         ]),
     };
     let oauth = oauth::OAuth::new();
