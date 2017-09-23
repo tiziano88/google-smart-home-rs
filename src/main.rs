@@ -34,7 +34,8 @@ use unicase::UniCase;
 mod google_actions;
 use google_actions::{ActionRequest, ExecuteResponse, ExecuteResponseCommand,
                      ExecuteResponsePayload, Name, QueryResponse, QueryResponsePayload,
-                     SyncResponse, SyncResponseDevice, SyncResponsePayload};
+                     SyncResponse, SyncResponseDevice, SyncResponseDeviceAttributes,
+                     SyncResponsePayload};
 
 mod light;
 use light::{Light, LightMode, LightStatus, LightType};
@@ -131,7 +132,9 @@ impl Handler for Hub {
                                 device_info: None,
                                 room_hint: None,
                                 structure_hint: None,
-                                attributes: None,
+                                attributes: Some(SyncResponseDeviceAttributes {
+                                    scene_reversible: Some(scene.reversible),
+                                }),
                             })
                         }
                     }
@@ -259,7 +262,9 @@ impl Handler for Hub {
                                         }
                                         &mut Device::Scene(ref mut scene) => {
                                             if scene.id == request_device.id {
-                                                scene.activate_scene(false);
+                                                scene.activate_scene(
+                                                    execution.params.deactivate.unwrap_or(false),
+                                                );
                                                 response.payload.commands.push(
                                                     ExecuteResponseCommand {
                                                         ids: vec![scene.id.clone()],
@@ -384,7 +389,7 @@ fn main() {
             Device::Scene(Scene {
                 id: "55".to_string(),
                 name: "Party mode".to_string(),
-                reversible: false,
+                reversible: true,
             }),
             /*
             Device::Thermostat(Thermostat {

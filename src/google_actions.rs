@@ -104,6 +104,7 @@ pub struct Params {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "thermostatMode")]
     pub thermostat_mode: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")] pub deactivate: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
