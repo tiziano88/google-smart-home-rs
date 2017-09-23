@@ -3,10 +3,12 @@ use std::collections::BTreeMap;
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct SyncResponseDevice {
     pub id: String,
-    #[serde(rename = "type")] pub type_: String,
+    #[serde(rename = "type")]
+    pub type_: String,
     pub name: Name,
     pub traits: Vec<String>,
-    #[serde(rename = "willReportState")] pub will_report_state: bool,
+    #[serde(rename = "willReportState")]
+    pub will_report_state: bool,
     #[serde(rename = "roomHint")]
     #[serde(skip)]
     pub room_hint: Option<String>,
@@ -17,8 +19,7 @@ pub struct SyncResponseDevice {
     #[serde(skip)]
     pub device_info: Option<DeviceInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub attributes:
-        Option<SyncResponseDeviceAttributes>,
+    pub attributes: Option<SyncResponseDeviceAttributes>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
@@ -34,32 +35,38 @@ pub struct Name {
     #[serde(skip)]
     pub default_name: Vec<String>,
     pub name: Option<String>,
-    #[serde(skip)] pub nicknames: Vec<String>,
+    #[serde(skip)]
+    pub nicknames: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct DeviceInfo {
     pub manifacturer: String,
     pub model: String,
-    #[serde(rename = "hwVersion")] pub hw_version: String,
-    #[serde(rename = "swVersion")] pub sw_version: String,
+    #[serde(rename = "hwVersion")]
+    pub hw_version: String,
+    #[serde(rename = "swVersion")]
+    pub sw_version: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct SyncResponse {
-    #[serde(rename = "requestId")] pub request_id: String,
+    #[serde(rename = "requestId")]
+    pub request_id: String,
     pub payload: SyncResponsePayload,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct SyncResponsePayload {
-    #[serde(rename = "agentUserId")] pub agent_user_id: String,
+    #[serde(rename = "agentUserId")]
+    pub agent_user_id: String,
     pub devices: Vec<SyncResponseDevice>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct QueryResponse {
-    #[serde(rename = "requestId")] pub request_id: String,
+    #[serde(rename = "requestId")]
+    pub request_id: String,
     pub payload: QueryResponsePayload,
 }
 
@@ -88,10 +95,14 @@ pub struct Execution {
 // TODO: Imple From and To for specific Device instances.
 #[derive(Serialize, Deserialize, Default, Debug, PartialEq)]
 pub struct Params {
-    #[serde(skip_serializing_if = "Option::is_none")] pub online: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")] pub on: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")] pub brightness: Option<u8>,
-    #[serde(skip_serializing_if = "Option::is_none")] pub color: Option<Color>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub online: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub on: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub brightness: Option<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub color: Option<Color>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "thermostatTemperatureSetpoint")]
     pub thermostat_temperature_setpoint: Option<f32>,
@@ -122,14 +133,17 @@ pub struct Color {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ExecuteResponse {
-    #[serde(rename = "requestId")] pub request_id: String,
+    #[serde(rename = "requestId")]
+    pub request_id: String,
     pub payload: ExecuteResponsePayload,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ExecuteResponsePayload {
-    #[serde(rename = "errorCode")] pub error_code: Option<String>,
-    #[serde(rename = "debugString")] pub debug_string: Option<String>,
+    #[serde(rename = "errorCode")]
+    pub error_code: Option<String>,
+    #[serde(rename = "debugString")]
+    pub debug_string: Option<String>,
     pub commands: Vec<ExecuteResponseCommand>,
 }
 
@@ -142,7 +156,8 @@ pub struct ExecuteResponseCommand {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ActionRequest {
-    #[serde(rename = "requestId")] pub request_id: String,
+    #[serde(rename = "requestId")]
+    pub request_id: String,
     pub inputs: Vec<ActionRequestInput>,
 }
 
@@ -154,8 +169,10 @@ pub struct ActionRequestInput {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct ActionRequestPayload {
-    #[serde(default)] pub devices: Vec<RequestDevice>,
-    #[serde(default)] pub commands: Vec<Command>,
+    #[serde(default)]
+    pub devices: Vec<RequestDevice>,
+    #[serde(default)]
+    pub commands: Vec<Command>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -179,12 +196,10 @@ fn test_sync_request() {
     let parsed_req: ActionRequest = serde_json::from_str(&json_req).unwrap();
     let expected_req = ActionRequest {
         request_id: "ff36a3cc-ec34-11e6-b1a0-64510650abcf".to_string(),
-        inputs: vec![
-            ActionRequestInput {
-                intent: "action.devices.SYNC".to_string(),
-                payload: None,
-            },
-        ],
+        inputs: vec![ActionRequestInput {
+                         intent: "action.devices.SYNC".to_string(),
+                         payload: None,
+                     }],
     };
     assert_eq!(expected_req, parsed_req);
 }
@@ -219,22 +234,14 @@ fn test_query_request() {
     let parsed_req: ActionRequest = serde_json::from_str(&json_req).unwrap();
     let expected_req = ActionRequest {
         request_id: "ff36a3cc-ec34-11e6-b1a0-64510650abcf".to_string(),
-        inputs: vec![
-            ActionRequestInput {
-                intent: "action.devices.QUERY".to_string(),
-                payload: Some(ActionRequestPayload {
-                    devices: vec![
-                        RequestDevice {
-                            id: "123".to_string(),
-                        },
-                        RequestDevice {
-                            id: "456".to_string(),
-                        },
-                    ],
-                    commands: vec![],
-                }),
-            },
-        ],
+        inputs: vec![ActionRequestInput {
+                         intent: "action.devices.QUERY".to_string(),
+                         payload: Some(ActionRequestPayload {
+                             devices: vec![RequestDevice { id: "123".to_string() },
+                                           RequestDevice { id: "456".to_string() }],
+                             commands: vec![],
+                         }),
+                     }],
     };
     assert_eq!(expected_req, parsed_req);
 }
@@ -278,34 +285,26 @@ fn test_execute_request() {
     let parsed_req: ActionRequest = serde_json::from_str(&json_req).unwrap();
     let expected_req = ActionRequest {
         request_id: "ff36a3cc-ec34-11e6-b1a0-64510650abcf".to_string(),
-        inputs: vec![
-            ActionRequestInput {
-                intent: "action.devices.EXECUTE".to_string(),
-                payload: Some(ActionRequestPayload {
-                    devices: vec![],
-                    commands: vec![
-                        Command {
-                            devices: vec![
-                                RequestDevice {
-                                    id: "123".to_string(),
-                                },
-                                RequestDevice {
-                                    id: "456".to_string(),
-                                },
-                            ],
-                            execution: vec![
-                                Execution {
-                                    command: "action.devices.\
-                                              commands.OnOff"
-                                        .to_string(),
-                                    params: Params { on: true },
-                                },
-                            ],
-                        },
-                    ],
-                }),
-            },
-        ],
+        inputs: vec![ActionRequestInput {
+                         intent: "action.devices.EXECUTE".to_string(),
+                         payload: Some(ActionRequestPayload {
+                             devices: vec![],
+                             commands: vec![Command {
+                                                devices: vec![RequestDevice {
+                                                                  id: "123".to_string(),
+                                                              },
+                                                              RequestDevice {
+                                                                  id: "456".to_string(),
+                                                              }],
+                                                execution: vec![Execution {
+                                                                    command: "action.devices.\
+                                                                              commands.OnOff"
+                                                                        .to_string(),
+                                                                    params: Params { on: true },
+                                                                }],
+                                            }],
+                         }),
+                     }],
     };
     assert_eq!(expected_req, parsed_req);
 }

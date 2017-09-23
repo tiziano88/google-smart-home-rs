@@ -5,6 +5,10 @@ extern crate router;
 extern crate serde_json;
 extern crate unicase;
 extern crate url;
+extern crate coap;
+
+use std::io;
+use coap::{CoAPServer, CoAPClient, CoAPRequest, CoAPResponse};
 
 #[macro_use]
 extern crate serde_derive;
@@ -73,8 +77,7 @@ impl Handler for Hub {
                             response.payload.devices.push(SyncResponseDevice {
                                 id: light.id.clone(),
                                 type_: light.type_.to_string(),
-                                traits: light
-                                    .available_light_modes
+                                traits: light.available_light_modes
                                     .iter()
                                     .map(LightMode::to_string)
                                     .collect(),
@@ -94,9 +97,8 @@ impl Handler for Hub {
                             response.payload.devices.push(SyncResponseDevice {
                                 id: thermostat.id.clone(),
                                 type_: "".to_string(), // XXX
-                                traits: vec![
-                                    "action.devices.traits.TemperatureSetting".to_string(),
-                                ],
+                                traits: vec!["action.devices.traits.TemperatureSetting"
+                                                 .to_string()],
                                 name: Name {
                                     default_name: vec![thermostat.name.to_string()],
                                     name: Some(thermostat.name.clone()),
@@ -140,9 +142,7 @@ impl Handler for Hub {
             } else if input.intent == "action.devices.QUERY" {
                 let mut response = QueryResponse {
                     request_id: action_request.request_id.clone(),
-                    payload: QueryResponsePayload {
-                        devices: btreemap!{},
-                    },
+                    payload: QueryResponsePayload { devices: btreemap!{} },
                 };
 
                 let ref devices = *self.devices.lock().unwrap();
@@ -150,12 +150,13 @@ impl Handler for Hub {
                     for request_device in payload.devices {
                         for device in devices {
                             match device {
-                                &Device::Light(ref light) => if light.id == request_device.id {
-                                    response
-                                        .payload
-                                        .devices
-                                        .insert(light.id.clone(), light.status.clone().into());
-                                },
+                                &Device::Light(ref light) => {
+                                    if light.id == request_device.id {
+                                        response.payload
+                                            .devices
+                                            .insert(light.id.clone(), light.status.clone().into());
+                                    }
+                                }
                                 &Device::Thermostat(ref thermostat) => {
                                     if thermostat.id == request_device.id {
                                         // TODO
@@ -207,47 +208,42 @@ impl Handler for Hub {
                                                         light.set_color(to_rgb(s));
                                                     }
                                                 }
-                                                response.payload.commands.push(
-                                                    ExecuteResponseCommand {
+                                                response.payload
+                                                    .commands
+                                                    .push(ExecuteResponseCommand {
                                                         ids: vec![light.id.clone()],
                                                         status: "SUCCESS".to_string(),
                                                         states: light.status.clone().into(),
-                                                    },
-                                                );
+                                                    });
                                             }
                                         }
                                         &mut Device::Thermostat(ref mut thermostat) => {
                                             if thermostat.id == request_device.id {
-                                                if let Some(s) =
-                                                    execution.params.thermostat_temperature_setpoint
-                                                {
+                                                if let Some(s) = execution.params
+                                                    .thermostat_temperature_setpoint {
                                                     thermostat.temperature_setpoint(s);
                                                 }
-                                                if let (Some(low), Some(high)) = (
-                                                    execution
-                                                        .params
-                                                        .thermostat_temperature_setpoint_low,
-                                                    execution
-                                                        .params
-                                                        .thermostat_temperature_setpoint_high,
-                                                ) {
+                                                if let (Some(low), Some(high)) =
+                                                    (execution.params
+                                                         .thermostat_temperature_setpoint_low,
+                                                     execution.params
+                                                         .thermostat_temperature_setpoint_high) {
                                                     thermostat.temperature_set_range(low, high);
                                                 }
-                                                if let Some(ref mode) =
-                                                    execution.params.thermostat_mode
-                                                {
-                                                    if let Ok(mode) = ThermostatMode::from_str(mode)
-                                                    {
+                                                if let Some(ref mode) = execution.params
+                                                    .thermostat_mode {
+                                                    if let Ok(mode) =
+                                                        ThermostatMode::from_str(mode) {
                                                         thermostat.thermostat_set_mode(mode);
                                                     }
                                                 }
-                                                response.payload.commands.push(
-                                                    ExecuteResponseCommand {
+                                                response.payload
+                                                    .commands
+                                                    .push(ExecuteResponseCommand {
                                                         ids: vec![thermostat.id.clone()],
                                                         status: "SUCCESS".to_string(),
                                                         states: thermostat.status.clone().into(),
-                                                    },
-                                                );
+                                                    });
                                             }
                                         }
                                         &mut Device::Scene(ref mut _scene) => {}
@@ -287,80 +283,75 @@ fn to_rgb(c: u64) -> rgb::RGB8 {
 fn main() {
     let mote = Arc::new(Mutex::new(mote::Mote::new("/dev/ttyACM0", true)));
     let hub = Hub {
-        devices: Mutex::new(vec![
-            Device::Light(Light {
-                id: "11".to_string(),
-                name: "Bedroom lights".to_string(),
-                status: LightStatus::default(),
-                type_: LightType::Light,
-                available_light_modes: vec![
-                    LightMode::OnOff,
-                    LightMode::Brightness,
-                    LightMode::ColorSpectrum,
-                ],
-                mote: mote.clone(),
-                pixel_low: 0,
-                pixel_high: 16,
-            }),
-            Device::Light(Light {
-                id: "22".to_string(),
-                name: "Kitchen lights".to_string(),
-                status: LightStatus::default(),
-                type_: LightType::Light,
-                available_light_modes: vec![
-                    LightMode::OnOff,
-                    LightMode::Brightness,
-                    LightMode::ColorSpectrum,
-                ],
-                mote: mote.clone(),
-                pixel_low: 16,
-                pixel_high: 32,
-            }),
-            Device::Light(Light {
-                id: "33".to_string(),
-                name: "Bathroom lights".to_string(),
-                status: LightStatus::default(),
-                type_: LightType::Light,
-                available_light_modes: vec![
-                    LightMode::OnOff,
-                    LightMode::Brightness,
-                    LightMode::ColorSpectrum,
-                ],
-                mote: mote.clone(),
-                pixel_low: 32,
-                pixel_high: 48,
-            }),
-            Device::Light(Light {
-                id: "44".to_string(),
-                name: "Living Room lights".to_string(),
-                status: LightStatus::default(),
-                type_: LightType::Light,
-                available_light_modes: vec![
-                    LightMode::OnOff,
-                    LightMode::Brightness,
-                    LightMode::ColorSpectrum,
-                ],
-                mote: mote.clone(),
-                pixel_low: 48,
-                pixel_high: 64,
-            }),
-            Device::Scene(Scene {
-                id: "55".to_string(),
-                name: "Party mode".to_string(),
-                reversible: false,
-            }),
-        ]),
+        devices: Mutex::new(vec![Device::Light(Light {
+                                     id: "11".to_string(),
+                                     name: "Bedroom lights".to_string(),
+                                     status: LightStatus::default(),
+                                     type_: LightType::Light,
+                                     available_light_modes: vec![LightMode::OnOff,
+                                                                 LightMode::Brightness,
+                                                                 LightMode::ColorSpectrum],
+                                     mote: mote.clone(),
+                                     pixel_low: 0,
+                                     pixel_high: 16,
+                                 }),
+                                 Device::Light(Light {
+                                     id: "22".to_string(),
+                                     name: "Kitchen lights".to_string(),
+                                     status: LightStatus::default(),
+                                     type_: LightType::Light,
+                                     available_light_modes: vec![LightMode::OnOff,
+                                                                 LightMode::Brightness,
+                                                                 LightMode::ColorSpectrum],
+                                     mote: mote.clone(),
+                                     pixel_low: 16,
+                                     pixel_high: 32,
+                                 }),
+                                 Device::Light(Light {
+                                     id: "33".to_string(),
+                                     name: "Bathroom lights".to_string(),
+                                     status: LightStatus::default(),
+                                     type_: LightType::Light,
+                                     available_light_modes: vec![LightMode::OnOff,
+                                                                 LightMode::Brightness,
+                                                                 LightMode::ColorSpectrum],
+                                     mote: mote.clone(),
+                                     pixel_low: 32,
+                                     pixel_high: 48,
+                                 }),
+                                 Device::Light(Light {
+                                     id: "44".to_string(),
+                                     name: "Living Room lights".to_string(),
+                                     status: LightStatus::default(),
+                                     type_: LightType::Light,
+                                     available_light_modes: vec![LightMode::OnOff,
+                                                                 LightMode::Brightness,
+                                                                 LightMode::ColorSpectrum],
+                                     mote: mote.clone(),
+                                     pixel_low: 48,
+                                     pixel_high: 64,
+                                 }),
+                                 Device::Scene(Scene {
+                                     id: "55".to_string(),
+                                     name: "Party mode".to_string(),
+                                     reversible: false,
+                                 })]),
     };
     let oauth = oauth::OAuth::new();
     let mut control = Router::new();
-    control
-        .get("/auth", oauth.auth, "auth")
+    control.get("/auth", oauth.auth, "auth")
         .post("/token", oauth.token, "token")
         .get("/login", oauth.login, "login")
         .post("/action", hub, "post action")
         .get("/action", get_action_handler, "get action")
         .options("/action", options_action_handler, "get action")
         .get("/", index_handler, "index");
+
+    let addr = "0.0.0.0:5684";
+
+    let mut server = CoAPServer::new(addr).unwrap();
+    server.handle(request_handler).unwrap();
+
     println!("Listening on port 1234");
     Iron::new(control).http("0.0.0.0:1234").unwrap();
 }
@@ -376,8 +367,13 @@ fn get_action_handler(_: &mut Request) -> IronResult<Response> {
 fn options_action_handler(_: &mut Request) -> IronResult<Response> {
     let mut rsp = Response::with((status::Ok, "options"));
     rsp.headers.set(AccessControlAllowOrigin::Any);
-    rsp.headers.set(AccessControlAllowHeaders(
-        vec![UniCase("Content-Type".to_string())],
-    ));
+    rsp.headers.set(AccessControlAllowHeaders(vec![UniCase("Content-Type".to_string())]));
     Ok(rsp)
+}
+
+fn request_handler(request: CoAPRequest) -> Option<CoAPResponse> {
+    println!("Receive request: {:?}", request);
+
+    // Return the auto-generated response
+    request.response
 }
