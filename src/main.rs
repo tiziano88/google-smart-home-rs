@@ -101,7 +101,7 @@ impl Handler for Hub {
                         &Device::Thermostat(ref thermostat) => {
                             response.payload.devices.push(SyncResponseDevice {
                                 id: thermostat.id.clone(),
-                                type_: "".to_string(), // XXX
+                                type_: "action.devices.types.THERMOSTAT".to_string(),
                                 traits: vec![
                                     "action.devices.traits.TemperatureSetting".to_string(),
                                 ],
@@ -115,7 +115,20 @@ impl Handler for Hub {
                                 device_info: None,
                                 room_hint: None,
                                 structure_hint: None,
-                                attributes: None,
+                                attributes: Some(SyncResponseDeviceAttributes {
+                                    available_thermostat_modes: Some(
+                                        thermostat
+                                            .available_thermostat_modes
+                                            .iter()
+                                            .map(ToString::to_string)
+                                            .collect::<Vec<String>>()
+                                            .connect(","),
+                                    ),
+                                    thermostat_temperature_unit: Some(
+                                        thermostat.thermostat_temperature_unit.to_string(),
+                                    ),
+                                    ..SyncResponseDeviceAttributes::default()
+                                }),
                             })
                         }
                         &Device::Scene(ref scene) => {
@@ -134,6 +147,7 @@ impl Handler for Hub {
                                 structure_hint: None,
                                 attributes: Some(SyncResponseDeviceAttributes {
                                     scene_reversible: Some(scene.reversible),
+                                    ..SyncResponseDeviceAttributes::default()
                                 }),
                             })
                         }
@@ -168,7 +182,10 @@ impl Handler for Hub {
                                 },
                                 &Device::Thermostat(ref thermostat) => {
                                     if thermostat.id == request_device.id {
-                                        // TODO
+                                        response.payload.devices.insert(
+                                            thermostat.id.clone(),
+                                            thermostat.status.clone().into(),
+                                        );
                                     }
                                 }
                                 &Device::Scene(ref _scene) => {}
@@ -391,11 +408,10 @@ fn main() {
                 name: "Party mode".to_string(),
                 reversible: true,
             }),
-            /*
             Device::Thermostat(Thermostat {
                 id: "66".to_string(),
-                name: "Thermo".to_string(),
-                available_thermostat_modes: vec![],
+                name: "Thermostat".to_string(),
+                available_thermostat_modes: vec![ThermostatMode::Off, ThermostatMode::Heat],
                 thermostat_temperature_unit: TemperatureUnit::C,
                 status: ThermostatStatus {
                     mode: ThermostatMode::Off,
@@ -403,10 +419,9 @@ fn main() {
                     temperature_ambient: 20.0,
                     temperature_setpoint_low: 10.0,
                     temperature_setpoint_high: 30.0,
-                    temperature_humidity_ambient: 50.0,
+                    humidity_ambient: 50.0,
                 },
             }),
-            */
         ]),
     };
     let oauth = oauth::OAuth::new();

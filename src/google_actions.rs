@@ -21,11 +21,17 @@ pub struct SyncResponseDevice {
         Option<SyncResponseDeviceAttributes>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Eq)]
 pub struct SyncResponseDeviceAttributes {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "sceneReversible")]
     pub scene_reversible: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "availableThermostatModes")]
+    pub available_thermostat_modes: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "thermostatTemperatureUnit")]
+    pub thermostat_temperature_unit: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
@@ -92,6 +98,12 @@ pub struct Params {
     #[serde(skip_serializing_if = "Option::is_none")] pub on: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")] pub brightness: Option<u8>,
     #[serde(skip_serializing_if = "Option::is_none")] pub color: Option<Color>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "thermostatTemperatureAmbient")]
+    pub thermostat_temperature_ambient: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "thermostatHumidityAmbient")]
+    pub thermostat_humidity_ambient: Option<f32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "thermostatTemperatureSetpoint")]
     pub thermostat_temperature_setpoint: Option<f32>,
