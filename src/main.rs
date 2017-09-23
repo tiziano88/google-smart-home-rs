@@ -36,7 +36,7 @@ mod light;
 use light::{Light, LightMode, LightStatus, LightType};
 
 mod thermostat;
-use thermostat::ThermostatMode;
+use thermostat::{Thermostat, ThermostatMode, ThermostatStatus, TemperatureUnit};
 
 mod scene;
 use scene::Scene;
@@ -361,6 +361,20 @@ fn main() {
                 id: "55".to_string(),
                 name: "Party mode".to_string(),
                 reversible: false,
+            }),
+            Device::Thermostat(Thermostat {
+                id: "66".to_string(),
+                name: "Thermo".to_string(),
+                available_thermostat_modes: vec![],
+                thermostat_temperature_unit: TemperatureUnit::C,
+                status: ThermostatStatus {
+                    mode: ThermostatMode::Off,
+                    temperature_setpoint: 21.0,
+                    temperature_ambient: 20.0,
+                    temperature_setpoint_low: 10.0,
+                    temperature_setpoint_high: 30.0,
+                    temperature_humidity_ambient: 50.0,
+                },
             }),
         ]),
     };
