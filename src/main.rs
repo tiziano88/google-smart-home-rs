@@ -21,6 +21,8 @@ use std::env;
 use std::io::Read;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time;
 
 use getopts::Options;
 use iron::headers::{AccessControlAllowHeaders, AccessControlAllowOrigin, ContentType};
@@ -341,6 +343,15 @@ fn main() {
     let mote_dev = matches
         .opt_str("mote_dev")
         .unwrap_or("/dev/ttyACM0".to_string());
+
+    thread::spawn(|| {
+        let mut t = 0u64;
+        loop {
+            debug!("tick: {:?}", t);
+            thread::sleep(time::Duration::from_millis(1000));
+            t += 1;
+        }
+    });
 
     //let mote = Arc::new(Mutex::new(mote::Mote::new(&mote_dev, true)));
     let hub = Hub {
