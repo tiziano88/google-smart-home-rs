@@ -52,6 +52,7 @@ mod device;
 use device::Device;
 
 mod color;
+use color::ColorFunc;
 
 mod oauth;
 
@@ -348,15 +349,21 @@ fn main() {
         .opt_str("mote_dev")
         .unwrap_or("/dev/ttyACM0".to_string());
 
-    let l1 = Arc::new(RwLock::new([BLACK; 16]));
-    let l2 = Arc::new(RwLock::new([BLACK; 16]));
-    let l3 = Arc::new(RwLock::new([BLACK; 16]));
-    let l4 = Arc::new(RwLock::new([BLACK; 16]));
+    let l1: Arc<Mutex<color::SolidColor>> = Arc::new(Mutex::new(color::SolidColor { c: BLACK }));
+    let l2: Arc<Mutex<color::SolidColor>> = Arc::new(Mutex::new(color::SolidColor { c: BLACK }));
+    let l3: Arc<Mutex<color::SolidColor>> = Arc::new(Mutex::new(color::SolidColor { c: BLACK }));
+    let l4: Arc<Mutex<color::SolidColor>> = Arc::new(Mutex::new(color::SolidColor { c: BLACK }));
 
-    thread::spawn(|| {
+    thread::spawn(move || {
+        let mut b1 = [BLACK; 16];
+        let mut b2 = [BLACK; 16];
+        let mut b3 = [BLACK; 16];
+        let mut b4 = [BLACK; 16];
+
         let mut t = 0u64;
         loop {
             debug!("tick: {:?}", t);
+            b1 = l1.lock().unwrap().step(t, &b1);
             thread::sleep(time::Duration::from_millis(1000));
             t += 1;
         }
