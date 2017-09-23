@@ -124,7 +124,7 @@ impl Handler for Hub {
                                             .iter()
                                             .map(ToString::to_string)
                                             .collect::<Vec<String>>()
-                                            .connect(","),
+                                            .join(","),
                                     ),
                                     thermostat_temperature_unit: Some(
                                         thermostat.thermostat_temperature_unit.to_string(),
