@@ -1,0 +1,7 @@
+#!/bin/sh
+
+set -x
+set -e
+
+ngrok
+RUST_LOG=main ~/smartlights
