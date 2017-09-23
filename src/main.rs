@@ -20,7 +20,7 @@ extern crate maplit;
 use std::env;
 use std::io::Read;
 use std::str::FromStr;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::time;
 
@@ -51,7 +51,11 @@ use scene::Scene;
 mod device;
 use device::Device;
 
+mod color;
+
 mod oauth;
+
+const BLACK: rgb::RGB8 = rgb::RGB8 { r: 0, g: 0, b: 0 };
 
 struct Hub {
     devices: Mutex<Vec<Device>>,
@@ -343,6 +347,11 @@ fn main() {
     let mote_dev = matches
         .opt_str("mote_dev")
         .unwrap_or("/dev/ttyACM0".to_string());
+
+    let l1 = Arc::new(RwLock::new([BLACK; 16]));
+    let l2 = Arc::new(RwLock::new([BLACK; 16]));
+    let l3 = Arc::new(RwLock::new([BLACK; 16]));
+    let l4 = Arc::new(RwLock::new([BLACK; 16]));
 
     thread::spawn(|| {
         let mut t = 0u64;
