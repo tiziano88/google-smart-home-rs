@@ -1,3 +1,4 @@
+extern crate getopts;
 extern crate iron;
 extern crate mote;
 extern crate rgb;
@@ -12,10 +13,12 @@ extern crate serde_derive;
 #[macro_use]
 extern crate maplit;
 
+use std::env;
 use std::io::Read;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 
+use getopts::Options;
 use iron::headers::{AccessControlAllowHeaders, AccessControlAllowOrigin, ContentType};
 use iron::middleware::Handler;
 use iron::prelude::{IronResult, Request, Response};
@@ -285,7 +288,17 @@ fn to_rgb(c: u64) -> rgb::RGB8 {
 }
 
 fn main() {
-    let mote = Arc::new(Mutex::new(mote::Mote::new("/dev/ttyACM0", true)));
+    let args: Vec<String> = env::args().collect();
+
+    let mut opts = Options::new();
+    opts.optopt("", "http_address", "HTTP address to listen on", "ADDRESS");
+    opts.optopt("", "mote_dev", "Serial port connecting to Mote", "FILE");
+
+    let matches = opts.parse(&args[1..]).unwrap();
+    let http_address = matches.opt_str("http_address").unwrap_or("0.0.0.0:1234".to_string());
+    let mote_dev = matches.opt_str("mote_dev").unwrap_or("/dev/ttyACM0".to_string());
+
+    let mote = Arc::new(Mutex::new(mote::Mote::new(&mote_dev, true)));
     let hub = Hub {
         devices: Mutex::new(vec![
             Device::Light(Light {
@@ -361,8 +374,8 @@ fn main() {
         .get("/action", get_action_handler, "get action")
         .options("/action", options_action_handler, "get action")
         .get("/", index_handler, "index");
-    println!("Listening on port 1234");
-    Iron::new(control).http("0.0.0.0:1234").unwrap();
+    println!("Listening on {}", http_address);
+    Iron::new(control).http(http_address).unwrap();
 }
 
 fn index_handler(_: &mut Request) -> IronResult<Response> {
