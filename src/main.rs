@@ -52,7 +52,6 @@ mod device;
 use device::Device;
 
 mod color;
-use color::ColorFunc;
 
 mod oauth;
 
@@ -427,11 +426,9 @@ fn main() {
     thread::spawn(move || {
         let mut mote = mote::Mote::new(&mote_dev, true);
 
+        let mut pixels = [BLACK; 16 * 4];
         let mut t = 0u64;
         loop {
-            debug!("tick: {:?}", t);
-
-            let mut pixels = [BLACK; 16 * 4];
             {
                 for device in devices.lock().unwrap().iter() {
                     match device {
@@ -455,7 +452,7 @@ fn main() {
             }
             mote.write(&pixels);
 
-            thread::sleep(time::Duration::from_millis(1000));
+            thread::sleep(time::Duration::from_millis(10));
             t += 1;
         }
     });

@@ -1,7 +1,6 @@
 extern crate mote;
 extern crate rgb;
 
-use std::sync::{Arc, Mutex};
 use std::string::ToString;
 
 use color;
