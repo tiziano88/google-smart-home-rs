@@ -59,7 +59,7 @@ mod oauth;
 const BLACK: rgb::RGB8 = rgb::RGB8 { r: 0, g: 0, b: 0 };
 
 struct Hub {
-    devices: Mutex<Vec<Device>>,
+    devices: Arc<Mutex<Vec<Device>>>,
 }
 
 impl Handler for Hub {
@@ -348,31 +348,10 @@ fn main() {
     let mote_dev = matches
         .opt_str("mote_dev")
         .unwrap_or("/dev/ttyACM0".to_string());
+    debug!("args parsed");
 
-    let l1: Arc<Mutex<color::ColorFunc>> = Arc::new(Mutex::new(color::SolidColor { c: BLACK }));
-    let l2: Arc<Mutex<color::ColorFunc>> = Arc::new(Mutex::new(color::SolidColor { c: BLACK }));
-    let l3: Arc<Mutex<color::ColorFunc>> = Arc::new(Mutex::new(color::SolidColor { c: BLACK }));
-    let l4: Arc<Mutex<color::ColorFunc>> = Arc::new(Mutex::new(color::SolidColor { c: BLACK }));
-
-    thread::spawn(move || {
-        let mut b1 = [BLACK; 16];
-        let mut b2 = [BLACK; 16];
-        let mut b3 = [BLACK; 16];
-        let mut b4 = [BLACK; 16];
-
-        let mut t = 0u64;
-        loop {
-            debug!("tick: {:?}", t);
-            b1 = l1.lock().unwrap().step(t, &b1);
-            thread::sleep(time::Duration::from_millis(1000));
-            t += 1;
-        }
-    });
-
-    //let mote = Arc::new(Mutex::new(mote::Mote::new(&mote_dev, true)));
     let hub = Hub {
-        devices: Mutex::new(vec![
-            /*
+        devices: Arc::new(Mutex::new(vec![
             Device::Light(Light {
                 id: "11".to_string(),
                 name: "Bedroom lights".to_string(),
@@ -383,9 +362,7 @@ fn main() {
                     LightMode::Brightness,
                     LightMode::ColorSpectrum,
                 ],
-                mote: mote.clone(),
-                pixel_low: 0,
-                pixel_high: 16,
+                color_func: Box::new(color::SolidColor { c: BLACK }),
             }),
             Device::Light(Light {
                 id: "22".to_string(),
@@ -397,9 +374,7 @@ fn main() {
                     LightMode::Brightness,
                     LightMode::ColorSpectrum,
                 ],
-                mote: mote.clone(),
-                pixel_low: 16,
-                pixel_high: 32,
+                color_func: Box::new(color::SolidColor { c: BLACK }),
             }),
             Device::Light(Light {
                 id: "33".to_string(),
@@ -411,9 +386,7 @@ fn main() {
                     LightMode::Brightness,
                     LightMode::ColorSpectrum,
                 ],
-                mote: mote.clone(),
-                pixel_low: 32,
-                pixel_high: 48,
+                color_func: Box::new(color::SolidColor { c: BLACK }),
             }),
             Device::Light(Light {
                 id: "44".to_string(),
@@ -425,11 +398,8 @@ fn main() {
                     LightMode::Brightness,
                     LightMode::ColorSpectrum,
                 ],
-                mote: mote.clone(),
-                pixel_low: 48,
-                pixel_high: 64,
+                color_func: Box::new(color::SolidColor { c: BLACK }),
             }),
-            */
             Device::Scene(Scene {
                 id: "55".to_string(),
                 name: "Party mode".to_string(),
@@ -449,8 +419,47 @@ fn main() {
                     humidity_ambient: 50.0,
                 },
             }),
-        ]),
+        ])),
     };
+
+    let devices = hub.devices.clone();
+
+    thread::spawn(move || {
+        let mut mote = mote::Mote::new(&mote_dev, true);
+
+        let mut t = 0u64;
+        loop {
+            debug!("tick: {:?}", t);
+
+            let mut pixels = [BLACK; 16 * 4];
+            {
+                for device in devices.lock().unwrap().iter() {
+                    match device {
+                        &Device::Light(ref light) => {
+                            let offset = match light.id.as_ref() {
+                                "11" => 0,
+                                "22" => 16,
+                                "33" => 32,
+                                "44" => 48,
+                                _ => 0,
+                            };
+                            let b0 = &pixels.clone()[offset..offset + 16];
+                            let b1 = light.color_func.step(t, b0);
+                            for i in 0..16 {
+                                pixels[i + offset] = b1[i];
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            mote.write(&pixels);
+
+            thread::sleep(time::Duration::from_millis(1000));
+            t += 1;
+        }
+    });
+
     let oauth = oauth::OAuth::new();
     let mut control = Router::new();
     control

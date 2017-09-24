@@ -1,7 +1,7 @@
 extern crate rgb;
 
 pub trait ColorFunc: Send {
-    fn step(&self, t: u64, current: &[rgb::RGB8; 16]) -> [rgb::RGB8; 16];
+    fn step(&self, t: u64, current: &[rgb::RGB8]) -> [rgb::RGB8; 16];
     fn color(&self) -> rgb::RGB8;
 }
 
@@ -10,7 +10,7 @@ pub struct SolidColor {
 }
 
 impl ColorFunc for SolidColor {
-    fn step(&self, t: u64, current: &[rgb::RGB8; 16]) -> [rgb::RGB8; 16] {
+    fn step(&self, t: u64, current: &[rgb::RGB8]) -> [rgb::RGB8; 16] {
         [self.c; 16]
     }
 

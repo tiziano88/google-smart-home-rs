@@ -4,6 +4,7 @@ extern crate rgb;
 use std::sync::{Arc, Mutex};
 use std::string::ToString;
 
+use color;
 use google_actions;
 
 pub struct Light {
@@ -12,9 +13,7 @@ pub struct Light {
     pub status: LightStatus,
     pub available_light_modes: Vec<LightMode>,
     pub type_: LightType,
-    pub mote: Arc<Mutex<mote::Mote>>,
-    pub pixel_low: usize,
-    pub pixel_high: usize,
+    pub color_func: Box<color::ColorFunc>,
 }
 
 pub enum LightMode {
@@ -142,12 +141,6 @@ impl Light {
             g: scaled_g,
             b: scaled_b,
         };
-        if let Ok(mut guard) = self.mote.lock() {
-            let mut pixels = guard.read().clone();
-            for i in self.pixel_low..self.pixel_high {
-                pixels[i] = c;
-            }
-            guard.write(&pixels);
-        }
+        self.color_func = Box::new(color::SolidColor { c: c });
     }
 }
