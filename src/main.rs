@@ -58,7 +58,7 @@ mod oauth;
 const BLACK: rgb::RGB8 = rgb::RGB8 { r: 0, g: 0, b: 0 };
 
 struct Hub {
-    devices: Arc<Mutex<Vec<Device>>>,
+    devices: Vec<Device>,
 }
 
 impl Handler for Hub {
@@ -80,10 +80,10 @@ impl Handler for Hub {
                     },
                 };
 
-                let ref devices = *self.devices.lock().unwrap();
-                for device in devices {
+                for device in &self.devices {
                     match device {
                         &Device::Light(ref light) => {
+                            let light = light.lock().unwrap();
                             response.payload.devices.push(SyncResponseDevice {
                                 id: light.id.clone(),
                                 type_: light.type_.to_string(),
@@ -105,6 +105,7 @@ impl Handler for Hub {
                             })
                         }
                         &Device::Thermostat(ref thermostat) => {
+                            let thermostat = thermostat.lock().unwrap();
                             response.payload.devices.push(SyncResponseDevice {
                                 id: thermostat.id.clone(),
                                 type_: "action.devices.types.THERMOSTAT".to_string(),
@@ -138,6 +139,7 @@ impl Handler for Hub {
                             })
                         }
                         &Device::Scene(ref scene) => {
+                            let scene = scene.lock().unwrap();
                             response.payload.devices.push(SyncResponseDevice {
                                 id: scene.id.clone(),
                                 type_: "action.devices.types.SCENE".to_string(),
@@ -175,18 +177,21 @@ impl Handler for Hub {
                     },
                 };
 
-                let ref devices = *self.devices.lock().unwrap();
                 if let Some(payload) = input.payload {
                     for request_device in payload.devices {
-                        for device in devices {
+                        for device in &self.devices {
                             match device {
-                                &Device::Light(ref light) => if light.id == request_device.id {
-                                    response
-                                        .payload
-                                        .devices
-                                        .insert(light.id.clone(), light.status.clone().into());
-                                },
+                                &Device::Light(ref light) => {
+                                    let light = light.lock().unwrap();
+                                    if light.id == request_device.id {
+                                        response
+                                            .payload
+                                            .devices
+                                            .insert(light.id.clone(), light.status.clone().into());
+                                    }
+                                }
                                 &Device::Thermostat(ref thermostat) => {
+                                    let thermostat = thermostat.lock().unwrap();
                                     if thermostat.id == request_device.id {
                                         response.payload.devices.insert(
                                             thermostat.id.clone(),
@@ -224,10 +229,10 @@ impl Handler for Hub {
                             debug!("execution: {:?}", execution);
                             for request_device in &command.devices {
                                 debug!("request_device: {:?}", request_device);
-                                let ref mut devices = *self.devices.lock().unwrap();
-                                for device in devices {
+                                for device in &self.devices {
                                     match device {
-                                        &mut Device::Light(ref mut light) => {
+                                        &Device::Light(ref light) => {
+                                            let mut light = light.lock().unwrap();
                                             if light.id == request_device.id {
                                                 if let Some(s) = execution.params.on {
                                                     light.set_on(s);
@@ -249,7 +254,8 @@ impl Handler for Hub {
                                                 );
                                             }
                                         }
-                                        &mut Device::Thermostat(ref mut thermostat) => {
+                                        &Device::Thermostat(ref thermostat) => {
+                                            let mut thermostat = thermostat.lock().unwrap();
                                             if thermostat.id == request_device.id {
                                                 if let Some(s) =
                                                     execution.params.thermostat_temperature_setpoint
@@ -283,7 +289,8 @@ impl Handler for Hub {
                                                 );
                                             }
                                         }
-                                        &mut Device::Scene(ref mut scene) => {
+                                        &Device::Scene(ref scene) => {
+                                            let mut scene = scene.lock().unwrap();
                                             if scene.id == request_device.id {
                                                 scene.activate_scene(
                                                     execution.params.deactivate.unwrap_or(false),
@@ -349,105 +356,125 @@ fn main() {
         .unwrap_or("/dev/ttyACM0".to_string());
     debug!("args parsed");
 
-    let hub = Hub {
-        devices: Arc::new(Mutex::new(vec![
-            Device::Light(Light {
-                id: "11".to_string(),
-                name: "Bedroom lights".to_string(),
-                status: LightStatus::default(),
-                type_: LightType::Light,
-                available_light_modes: vec![
-                    LightMode::OnOff,
-                    LightMode::Brightness,
-                    LightMode::ColorSpectrum,
-                ],
-                color_func: Box::new(color::SolidColor { c: BLACK }),
-            }),
-            Device::Light(Light {
-                id: "22".to_string(),
-                name: "Kitchen lights".to_string(),
-                status: LightStatus::default(),
-                type_: LightType::Light,
-                available_light_modes: vec![
-                    LightMode::OnOff,
-                    LightMode::Brightness,
-                    LightMode::ColorSpectrum,
-                ],
-                color_func: Box::new(color::SolidColor { c: BLACK }),
-            }),
-            Device::Light(Light {
-                id: "33".to_string(),
-                name: "Bathroom lights".to_string(),
-                status: LightStatus::default(),
-                type_: LightType::Light,
-                available_light_modes: vec![
-                    LightMode::OnOff,
-                    LightMode::Brightness,
-                    LightMode::ColorSpectrum,
-                ],
-                color_func: Box::new(color::SolidColor { c: BLACK }),
-            }),
-            Device::Light(Light {
-                id: "44".to_string(),
-                name: "Living Room lights".to_string(),
-                status: LightStatus::default(),
-                type_: LightType::Light,
-                available_light_modes: vec![
-                    LightMode::OnOff,
-                    LightMode::Brightness,
-                    LightMode::ColorSpectrum,
-                ],
-                color_func: Box::new(color::SolidColor { c: BLACK }),
-            }),
-            Device::Scene(Scene {
-                id: "55".to_string(),
-                name: "Party mode".to_string(),
-                reversible: true,
-            }),
-            Device::Thermostat(Thermostat {
-                id: "66".to_string(),
-                name: "Thermostat".to_string(),
-                available_thermostat_modes: vec![ThermostatMode::Off, ThermostatMode::Heat],
-                thermostat_temperature_unit: TemperatureUnit::C,
-                status: ThermostatStatus {
-                    mode: ThermostatMode::Off,
-                    temperature_setpoint: 21.0,
-                    temperature_ambient: 20.0,
-                    temperature_setpoint_low: 10.0,
-                    temperature_setpoint_high: 30.0,
-                    humidity_ambient: 50.0,
-                },
-            }),
-        ])),
-    };
+    let bedroom_lights = Arc::new(Mutex::new(Light {
+        id: "11".to_string(),
+        name: "Bedroom lights".to_string(),
+        status: LightStatus::default(),
+        type_: LightType::Light,
+        available_light_modes: vec![
+            LightMode::OnOff,
+            LightMode::Brightness,
+            LightMode::ColorSpectrum,
+        ],
+        color_func: Box::new(color::SolidColor { c: BLACK }),
+    }));
 
-    let devices = hub.devices.clone();
+    let kitchen_lights = Arc::new(Mutex::new(Light {
+        id: "22".to_string(),
+        name: "Kitchen lights".to_string(),
+        status: LightStatus::default(),
+        type_: LightType::Light,
+        available_light_modes: vec![
+            LightMode::OnOff,
+            LightMode::Brightness,
+            LightMode::ColorSpectrum,
+        ],
+        color_func: Box::new(color::SolidColor { c: BLACK }),
+    }));
+
+    let bathroom_lights = Arc::new(Mutex::new(Light {
+        id: "33".to_string(),
+        name: "Bathroom lights".to_string(),
+        status: LightStatus::default(),
+        type_: LightType::Light,
+        available_light_modes: vec![
+            LightMode::OnOff,
+            LightMode::Brightness,
+            LightMode::ColorSpectrum,
+        ],
+        color_func: Box::new(color::SolidColor { c: BLACK }),
+    }));
+
+    let living_room_lights = Arc::new(Mutex::new(Light {
+        id: "44".to_string(),
+        name: "Living Room lights".to_string(),
+        status: LightStatus::default(),
+        type_: LightType::Light,
+        available_light_modes: vec![
+            LightMode::OnOff,
+            LightMode::Brightness,
+            LightMode::ColorSpectrum,
+        ],
+        color_func: Box::new(color::SolidColor { c: BLACK }),
+    }));
+
+    let party_mode = Arc::new(Mutex::new(Scene {
+        id: "55".to_string(),
+        name: "Party mode".to_string(),
+        reversible: true,
+    }));
+
+    let thermostat = Arc::new(Mutex::new(Thermostat {
+        id: "66".to_string(),
+        name: "Thermostat".to_string(),
+        available_thermostat_modes: vec![ThermostatMode::Off, ThermostatMode::Heat],
+        thermostat_temperature_unit: TemperatureUnit::C,
+        status: ThermostatStatus {
+            mode: ThermostatMode::Off,
+            temperature_setpoint: 21.0,
+            temperature_ambient: 20.0,
+            temperature_setpoint_low: 10.0,
+            temperature_setpoint_high: 30.0,
+            humidity_ambient: 50.0,
+        },
+    }));
+
+    let hub = Hub {
+        devices: vec![
+            Device::Light(bedroom_lights.clone()),
+            Device::Light(kitchen_lights.clone()),
+            Device::Light(bathroom_lights.clone()),
+            Device::Light(living_room_lights.clone()),
+            Device::Scene(party_mode.clone()),
+            Device::Thermostat(thermostat.clone()),
+        ],
+    };
 
     thread::spawn(move || {
         let mut mote = mote::Mote::new(&mote_dev, true);
 
         let mut pixels = [BLACK; 16 * 4];
         let mut t = 0u64;
+
         loop {
             {
-                for device in devices.lock().unwrap().iter() {
-                    match device {
-                        &Device::Light(ref light) => {
-                            let offset = match light.id.as_ref() {
-                                "11" => 0,
-                                "22" => 16,
-                                "33" => 32,
-                                "44" => 48,
-                                _ => 0,
-                            };
-                            let b0 = &pixels.clone()[offset..offset + 16];
-                            let b1 = light.color_func.step(t, b0);
-                            for i in 0..16 {
-                                pixels[i + offset] = b1[i];
-                            }
-                        }
-                        _ => {}
-                    }
+                for i in 0..16 {
+                    let offset = 0;
+                    let lights = bedroom_lights.lock().unwrap();
+                    let b0 = &pixels.clone()[offset..offset + 16];
+                    let b1 = lights.color_func.step(t, b0);
+                    pixels[i + offset] = b1[i];
+                }
+                for i in 0..16 {
+                    let offset = 16;
+                    let lights = kitchen_lights.lock().unwrap();
+                    let b0 = &pixels.clone()[offset..offset + 16];
+                    let b1 = lights.color_func.step(t, b0);
+                    pixels[i + offset] = b1[i];
+                }
+                for i in 0..16 {
+                    let offset = 32;
+                    let lights = bathroom_lights.lock().unwrap();
+                    let b0 = &pixels.clone()[offset..offset + 16];
+                    let b1 = lights.color_func.step(t, b0);
+                    pixels[i + offset] = b1[i];
+                }
+                for i in 0..16 {
+                    let offset = 48;
+                    let lights = living_room_lights.lock().unwrap();
+                    let b0 = &pixels.clone()[offset..offset + 16];
+                    let b1 = lights.color_func.step(t, b0);
+                    pixels[i + offset] = b1[i];
                 }
             }
             mote.write(&pixels);
