@@ -2,6 +2,7 @@ extern crate mote;
 extern crate rgb;
 
 use std::string::ToString;
+use std::sync::{Arc, Mutex, RwLock};
 
 use color;
 use google_actions;
@@ -9,10 +10,10 @@ use google_actions;
 pub struct Light {
     pub id: String,
     pub name: String,
-    pub status: LightStatus,
+    pub status: Mutex<LightStatus>,
     pub available_light_modes: Vec<LightMode>,
     pub type_: LightType,
-    pub color_func: Box<color::ColorFunc>,
+    pub color_func: Mutex<Box<color::ColorFunc>>,
 }
 
 pub enum LightMode {
@@ -106,40 +107,52 @@ fn from_rgb(c: &rgb::RGB8) -> u64 {
 }
 
 impl Light {
-    pub fn set_on(&mut self, s: bool) {
+    pub fn set_on(&self, s: bool) {
         debug!("set_on: {:?}", s);
-        self.status.on = s;
+        let mut status = self.status.lock().unwrap();
+        status.on = s;
         self.output();
     }
 
-    pub fn set_brightness(&mut self, s: u8) {
+    pub fn set_brightness(&self, s: u8) {
         debug!("set_brightness: {:?}", s);
-        self.status.brightness = s;
-        self.status.on = true;
+        let mut status = self.status.lock().unwrap();
+        status.brightness = s;
+        status.on = true;
         self.output();
     }
 
-    pub fn set_color(&mut self, c: rgb::RGB8) {
+    pub fn set_color(&self, c: rgb::RGB8) {
         debug!("set_color: {:?}", c);
-        self.status.color = c;
-        self.status.on = true;
+        let mut status = self.status.lock().unwrap();
+        status.color = c;
+        status.on = true;
         self.output();
     }
 
-    fn output(&mut self) {
-        let scale = if self.status.on {
-            self.status.brightness
+    pub fn set_color_func(&self, f: Box<color::ColorFunc>) {
+        *self.color_func.lock().unwrap() = f;
+    }
+
+    pub fn get_status(&self) -> LightStatus {
+        self.status.lock().unwrap().clone()
+    }
+
+    fn output(&self) {
+        let status = self.status.lock().unwrap();
+        let scale = if status.on {
+            status.brightness
         } else {
             0
         } as u32;
-        let scaled_r = (self.status.color.r as u32 * scale / 100) as u8;
-        let scaled_g = (self.status.color.g as u32 * scale / 100) as u8;
-        let scaled_b = (self.status.color.b as u32 * scale / 100) as u8;
+        let scaled_r = (status.color.r as u32 * scale / 100) as u8;
+        let scaled_g = (status.color.g as u32 * scale / 100) as u8;
+        let scaled_b = (status.color.b as u32 * scale / 100) as u8;
         let c = rgb::RGB8 {
             r: scaled_r,
             g: scaled_g,
             b: scaled_b,
         };
-        self.color_func = Box::new(color::SolidColor { c: c });
+        self.set_color_func(Box::new(color::SolidColor { c: c }));
     }
 }

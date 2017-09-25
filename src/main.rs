@@ -83,7 +83,6 @@ impl Handler for Hub {
                 for device in &self.devices {
                     match device {
                         &Device::Light(ref light) => {
-                            let light = light.lock().unwrap();
                             response.payload.devices.push(SyncResponseDevice {
                                 id: light.id.clone(),
                                 type_: light.type_.to_string(),
@@ -105,7 +104,6 @@ impl Handler for Hub {
                             })
                         }
                         &Device::Thermostat(ref thermostat) => {
-                            let thermostat = thermostat.lock().unwrap();
                             response.payload.devices.push(SyncResponseDevice {
                                 id: thermostat.id.clone(),
                                 type_: "action.devices.types.THERMOSTAT".to_string(),
@@ -139,7 +137,6 @@ impl Handler for Hub {
                             })
                         }
                         &Device::Scene(ref scene) => {
-                            let scene = scene.lock().unwrap();
                             response.payload.devices.push(SyncResponseDevice {
                                 id: scene.id.clone(),
                                 type_: "action.devices.types.SCENE".to_string(),
@@ -181,17 +178,13 @@ impl Handler for Hub {
                     for request_device in payload.devices {
                         for device in &self.devices {
                             match device {
-                                &Device::Light(ref light) => {
-                                    let light = light.lock().unwrap();
-                                    if light.id == request_device.id {
-                                        response
-                                            .payload
-                                            .devices
-                                            .insert(light.id.clone(), light.status.clone().into());
-                                    }
-                                }
+                                &Device::Light(ref light) => if light.id == request_device.id {
+                                    response
+                                        .payload
+                                        .devices
+                                        .insert(light.id.clone(), light.get_status().into());
+                                },
                                 &Device::Thermostat(ref thermostat) => {
-                                    let thermostat = thermostat.lock().unwrap();
                                     if thermostat.id == request_device.id {
                                         response.payload.devices.insert(
                                             thermostat.id.clone(),
@@ -232,7 +225,6 @@ impl Handler for Hub {
                                 for device in &self.devices {
                                     match device {
                                         &Device::Light(ref light) => {
-                                            let mut light = light.lock().unwrap();
                                             if light.id == request_device.id {
                                                 if let Some(s) = execution.params.on {
                                                     light.set_on(s);
@@ -249,48 +241,44 @@ impl Handler for Hub {
                                                     ExecuteResponseCommand {
                                                         ids: vec![light.id.clone()],
                                                         status: "SUCCESS".to_string(),
-                                                        states: light.status.clone().into(),
+                                                        states: light.get_status().into(),
                                                     },
                                                 );
                                             }
                                         }
-                                        &Device::Thermostat(ref thermostat) => {
-                                            let mut thermostat = thermostat.lock().unwrap();
-                                            if thermostat.id == request_device.id {
-                                                if let Some(s) =
-                                                    execution.params.thermostat_temperature_setpoint
-                                                {
-                                                    thermostat.temperature_setpoint(s);
-                                                }
-                                                if let (Some(low), Some(high)) = (
-                                                    execution
-                                                        .params
-                                                        .thermostat_temperature_setpoint_low,
-                                                    execution
-                                                        .params
-                                                        .thermostat_temperature_setpoint_high,
-                                                ) {
-                                                    thermostat.temperature_set_range(low, high);
-                                                }
-                                                if let Some(ref mode) =
-                                                    execution.params.thermostat_mode
-                                                {
-                                                    if let Ok(mode) = ThermostatMode::from_str(mode)
-                                                    {
-                                                        thermostat.thermostat_set_mode(mode);
-                                                    }
-                                                }
-                                                response.payload.commands.push(
-                                                    ExecuteResponseCommand {
-                                                        ids: vec![thermostat.id.clone()],
-                                                        status: "SUCCESS".to_string(),
-                                                        states: thermostat.status.clone().into(),
-                                                    },
-                                                );
+                                        &Device::Thermostat(ref thermostat) => if thermostat.id ==
+                                            request_device.id
+                                        {
+                                            if let Some(s) =
+                                                execution.params.thermostat_temperature_setpoint
+                                            {
+                                                thermostat.temperature_setpoint(s);
                                             }
-                                        }
-                                        &Device::Scene(ref scene) => {
-                                            let mut scene = scene.lock().unwrap();
+                                            if let (Some(low), Some(high)) = (
+                                                execution
+                                                    .params
+                                                    .thermostat_temperature_setpoint_low,
+                                                execution
+                                                    .params
+                                                    .thermostat_temperature_setpoint_high,
+                                            ) {
+                                                thermostat.temperature_set_range(low, high);
+                                            }
+                                            if let Some(ref mode) = execution.params.thermostat_mode
+                                            {
+                                                if let Ok(mode) = ThermostatMode::from_str(mode) {
+                                                    thermostat.thermostat_set_mode(mode);
+                                                }
+                                            }
+                                            response.payload.commands.push(
+                                                ExecuteResponseCommand {
+                                                    ids: vec![thermostat.id.clone()],
+                                                    status: "SUCCESS".to_string(),
+                                                    states: thermostat.status.clone().into(),
+                                                },
+                                            );
+                                        },
+                                        &Device::Scene(ref mut scene) => {
                                             if scene.id == request_device.id {
                                                 scene.activate_scene(
                                                     execution.params.deactivate.unwrap_or(false),
@@ -356,65 +344,65 @@ fn main() {
         .unwrap_or("/dev/ttyACM0".to_string());
     debug!("args parsed");
 
-    let bedroom_lights = Arc::new(Mutex::new(Light {
+    let bedroom_lights = Box::new(Light {
         id: "11".to_string(),
         name: "Bedroom lights".to_string(),
-        status: LightStatus::default(),
+        status: Mutex::new(LightStatus::default()),
         type_: LightType::Light,
         available_light_modes: vec![
             LightMode::OnOff,
             LightMode::Brightness,
             LightMode::ColorSpectrum,
         ],
-        color_func: Box::new(color::SolidColor { c: BLACK }),
-    }));
+        color_func: Mutex::new(Box::new(color::SolidColor { c: BLACK })),
+    });
 
-    let kitchen_lights = Arc::new(Mutex::new(Light {
+    let kitchen_lights = Box::new(Light {
         id: "22".to_string(),
         name: "Kitchen lights".to_string(),
-        status: LightStatus::default(),
+        status: Mutex::new(LightStatus::default()),
         type_: LightType::Light,
         available_light_modes: vec![
             LightMode::OnOff,
             LightMode::Brightness,
             LightMode::ColorSpectrum,
         ],
-        color_func: Box::new(color::SolidColor { c: BLACK }),
-    }));
+        color_func: Mutex::new(Box::new(color::SolidColor { c: BLACK })),
+    });
 
-    let bathroom_lights = Arc::new(Mutex::new(Light {
+    let bathroom_lights = Box::new(Light {
         id: "33".to_string(),
         name: "Bathroom lights".to_string(),
-        status: LightStatus::default(),
+        status: Mutex::new(LightStatus::default()),
         type_: LightType::Light,
         available_light_modes: vec![
             LightMode::OnOff,
             LightMode::Brightness,
             LightMode::ColorSpectrum,
         ],
-        color_func: Box::new(color::SolidColor { c: BLACK }),
-    }));
+        color_func: Mutex::new(Box::new(color::SolidColor { c: BLACK })),
+    });
 
-    let living_room_lights = Arc::new(Mutex::new(Light {
+    let living_room_lights = Box::new(Light {
         id: "44".to_string(),
         name: "Living Room lights".to_string(),
-        status: LightStatus::default(),
+        status: Mutex::new(LightStatus::default()),
         type_: LightType::Light,
         available_light_modes: vec![
             LightMode::OnOff,
             LightMode::Brightness,
             LightMode::ColorSpectrum,
         ],
-        color_func: Box::new(color::SolidColor { c: BLACK }),
-    }));
+        color_func: Mutex::new(Box::new(color::SolidColor { c: BLACK })),
+    });
 
-    let party_mode = Arc::new(Mutex::new(Scene {
+    let party_mode = Box::new(Scene {
         id: "55".to_string(),
         name: "Party mode".to_string(),
         reversible: true,
-    }));
+    });
 
-    let thermostat = Arc::new(Mutex::new(Thermostat {
+    let thermostat = Box::new(Thermostat {
         id: "66".to_string(),
         name: "Thermostat".to_string(),
         available_thermostat_modes: vec![ThermostatMode::Off, ThermostatMode::Heat],
@@ -427,16 +415,16 @@ fn main() {
             temperature_setpoint_high: 30.0,
             humidity_ambient: 50.0,
         },
-    }));
+    });
 
     let hub = Hub {
         devices: vec![
-            Device::Light(bedroom_lights.clone()),
-            Device::Light(kitchen_lights.clone()),
-            Device::Light(bathroom_lights.clone()),
-            Device::Light(living_room_lights.clone()),
-            Device::Scene(party_mode.clone()),
-            Device::Thermostat(thermostat.clone()),
+            Device::Light(bedroom_lights),
+            Device::Light(kitchen_lights),
+            Device::Light(bathroom_lights),
+            Device::Light(living_room_lights),
+            Device::Scene(party_mode),
+            Device::Thermostat(thermostat),
         ],
     };
 
@@ -447,41 +435,42 @@ fn main() {
         let mut t = 0u64;
 
         loop {
-            {
-                for i in 0..16 {
-                    let offset = 0;
-                    let lights = bedroom_lights.lock().unwrap();
-                    let b0 = &pixels.clone()[offset..offset + 16];
-                    let b1 = lights.color_func.step(t, b0);
-                    pixels[i + offset] = b1[i];
-                }
-                for i in 0..16 {
-                    let offset = 16;
-                    let lights = kitchen_lights.lock().unwrap();
-                    let b0 = &pixels.clone()[offset..offset + 16];
-                    let b1 = lights.color_func.step(t, b0);
-                    pixels[i + offset] = b1[i];
-                }
-                for i in 0..16 {
-                    let offset = 32;
-                    let lights = bathroom_lights.lock().unwrap();
-                    let b0 = &pixels.clone()[offset..offset + 16];
-                    let b1 = lights.color_func.step(t, b0);
-                    pixels[i + offset] = b1[i];
-                }
-                for i in 0..16 {
-                    let offset = 48;
-                    let lights = living_room_lights.lock().unwrap();
-                    let b0 = &pixels.clone()[offset..offset + 16];
-                    let b1 = lights.color_func.step(t, b0);
-                    pixels[i + offset] = b1[i];
-                }
+            let offset = 0;
+            let lights = &bedroom_lights;
+            for i in 0..16 {
+                let b0 = &pixels.clone()[offset..offset + 16];
+                let b1 = lights.color_func.lock().unwrap().step(t, b0);
+                pixels[i + offset] = b1[i];
             }
-            mote.write(&pixels);
 
-            thread::sleep(time::Duration::from_millis(10));
-            t += 1;
+            let offset = 16;
+            let lights = &kitchen_lights;
+            for i in 0..16 {
+                let b0 = &pixels.clone()[offset..offset + 16];
+                let b1 = lights.color_func.lock().unwrap().step(t, b0);
+                pixels[i + offset] = b1[i];
+            }
+
+            let offset = 32;
+            let lights = &bathroom_lights;
+            for i in 0..16 {
+                let b0 = &pixels.clone()[offset..offset + 16];
+                let b1 = lights.color_func.lock().unwrap().step(t, b0);
+                pixels[i + offset] = b1[i];
+            }
+
+            let offset = 48;
+            let lights = &living_room_lights;
+            for i in 0..16 {
+                let b0 = &pixels.clone()[offset..offset + 16];
+                let b1 = lights.color_func.lock().unwrap().step(t, b0);
+                pixels[i + offset] = b1[i];
+            }
         }
+        mote.write(&pixels);
+
+        thread::sleep(time::Duration::from_millis(10));
+        t += 1;
     });
 
     let oauth = oauth::OAuth::new();

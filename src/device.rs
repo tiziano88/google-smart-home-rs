@@ -5,7 +5,7 @@ use scene;
 use std::sync::{Arc, Mutex, RwLock};
 
 pub enum Device {
-    Light(Arc<Mutex<light::Light>>),
-    Thermostat(Arc<Mutex<thermostat::Thermostat>>),
-    Scene(Arc<Mutex<scene::Scene>>),
+    Light(Box<light::Light>),
+    Thermostat(Box<thermostat::Thermostat>),
+    Scene(Box<scene::Scene>),
 }
