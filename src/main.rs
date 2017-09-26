@@ -4,6 +4,7 @@ extern crate iron;
 extern crate mote;
 extern crate rgb;
 extern crate router;
+extern crate scroll_phat_hd;
 extern crate serde_json;
 extern crate unicase;
 extern crate url;
@@ -447,40 +448,54 @@ fn main() {
         let mut t = 0u64;
 
         loop {
-            {
-                for i in 0..16 {
-                    let offset = 0;
-                    let lights = bedroom_lights.lock().unwrap();
-                    let b0 = &pixels.clone()[offset..offset + 16];
-                    let b1 = lights.color_func.step(t, b0);
-                    pixels[i + offset] = b1[i];
-                }
-                for i in 0..16 {
-                    let offset = 16;
-                    let lights = kitchen_lights.lock().unwrap();
-                    let b0 = &pixels.clone()[offset..offset + 16];
-                    let b1 = lights.color_func.step(t, b0);
-                    pixels[i + offset] = b1[i];
-                }
-                for i in 0..16 {
-                    let offset = 32;
-                    let lights = bathroom_lights.lock().unwrap();
-                    let b0 = &pixels.clone()[offset..offset + 16];
-                    let b1 = lights.color_func.step(t, b0);
-                    pixels[i + offset] = b1[i];
-                }
-                for i in 0..16 {
-                    let offset = 48;
-                    let lights = living_room_lights.lock().unwrap();
-                    let b0 = &pixels.clone()[offset..offset + 16];
-                    let b1 = lights.color_func.step(t, b0);
-                    pixels[i + offset] = b1[i];
-                }
+            for i in 0..16 {
+                let offset = 0;
+                let lights = bedroom_lights.lock().unwrap();
+                let b0 = &pixels.clone()[offset..offset + 16];
+                let b1 = lights.color_func.step(t, b0);
+                pixels[i + offset] = b1[i];
             }
-            mote.write(&pixels);
+            for i in 0..16 {
+                let offset = 16;
+                let lights = kitchen_lights.lock().unwrap();
+                let b0 = &pixels.clone()[offset..offset + 16];
+                let b1 = lights.color_func.step(t, b0);
+                pixels[i + offset] = b1[i];
+            }
+            for i in 0..16 {
+                let offset = 32;
+                let lights = bathroom_lights.lock().unwrap();
+                let b0 = &pixels.clone()[offset..offset + 16];
+                let b1 = lights.color_func.step(t, b0);
+                pixels[i + offset] = b1[i];
+            }
+            for i in 0..16 {
+                let offset = 48;
+                let lights = living_room_lights.lock().unwrap();
+                let b0 = &pixels.clone()[offset..offset + 16];
+                let b1 = lights.color_func.step(t, b0);
+                pixels[i + offset] = b1[i];
+            }
+        }
+        mote.write(&pixels);
 
-            thread::sleep(time::Duration::from_millis(10));
-            t += 1;
+        thread::sleep(time::Duration::from_millis(10));
+        t += 1;
+    });
+
+    thread::spawn(move || {
+        let mut display = scroll_phat_hd::display::TermDisplay::new();
+        let mut scroller = scroll_phat_hd::scroller::Scroller::new(&mut display);
+
+        loop {
+            {
+                let thermostat = thermostat.lock().unwrap();
+                info!("ambient: {:?}", thermostat.status.temperature_setpoint);
+                scroller.set_text(&format!("{}°C", thermostat.status.temperature_setpoint));
+                scroller.show();
+            }
+
+            thread::sleep(time::Duration::from_millis(1000));
         }
     });
 
