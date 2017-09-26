@@ -497,7 +497,7 @@ fn main() {
                         scroller.show();
                     }
                     _ => {
-                        info!("ambient: {:?}", thermostat.status.temperature_setpoint);
+                        info!("setpoint: {:?}", thermostat.status.temperature_setpoint);
                         scroller
                             .set_text(&format!("{}°C", thermostat.status.temperature_setpoint));
                         scroller.show();
