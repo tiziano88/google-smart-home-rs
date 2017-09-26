@@ -62,6 +62,79 @@ struct Hub {
     devices: Vec<Device>,
 }
 
+fn handle_sync_light(response: &mut SyncResponse, light: &Light) {
+    response.payload.devices.push(SyncResponseDevice {
+        id: light.id.clone(),
+        type_: light.type_.to_string(),
+        traits: light
+            .available_light_modes
+            .iter()
+            .map(LightMode::to_string)
+            .collect(),
+        name: Name {
+            default_name: vec![light.name.to_string()],
+            name: Some(light.name.clone()),
+            nicknames: vec![],
+        },
+        will_report_state: false,
+        device_info: None,
+        room_hint: None,
+        structure_hint: None,
+        attributes: None,
+    })
+}
+
+fn handle_sync_thermostat(response: &mut SyncResponse, thermostat: &Thermostat) {
+    response.payload.devices.push(SyncResponseDevice {
+        id: thermostat.id.clone(),
+        type_: "action.devices.types.THERMOSTAT".to_string(),
+        traits: vec!["action.devices.traits.TemperatureSetting".to_string()],
+        name: Name {
+            default_name: vec![thermostat.name.to_string()],
+            name: Some(thermostat.name.clone()),
+            nicknames: vec![],
+        },
+        // TODO: attributes.
+        will_report_state: false,
+        device_info: None,
+        room_hint: None,
+        structure_hint: None,
+        attributes: Some(SyncResponseDeviceAttributes {
+            available_thermostat_modes: Some(
+                thermostat
+                    .available_thermostat_modes
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<String>>()
+                    .join(","),
+            ),
+            thermostat_temperature_unit: Some(thermostat.thermostat_temperature_unit.to_string()),
+            ..SyncResponseDeviceAttributes::default()
+        }),
+    })
+}
+
+fn handle_sync_scene(response: &mut SyncResponse, scene: &Scene) {
+    response.payload.devices.push(SyncResponseDevice {
+        id: scene.id.clone(),
+        type_: "action.devices.types.SCENE".to_string(),
+        traits: vec!["action.devices.traits.Scene".to_string()],
+        name: Name {
+            default_name: vec![scene.name.to_string()],
+            name: Some(scene.name.clone()),
+            nicknames: vec![],
+        },
+        will_report_state: false,
+        device_info: None,
+        room_hint: None,
+        structure_hint: None,
+        attributes: Some(SyncResponseDeviceAttributes {
+            scene_reversible: Some(scene.reversible),
+            ..SyncResponseDeviceAttributes::default()
+        }),
+    })
+}
+
 impl Handler for Hub {
     fn handle(&self, req: &mut Request) -> IronResult<Response> {
         info!("hub handler");
@@ -85,80 +158,15 @@ impl Handler for Hub {
                     match device {
                         &Device::Light(ref light) => {
                             let light = light.lock().unwrap();
-                            response.payload.devices.push(SyncResponseDevice {
-                                id: light.id.clone(),
-                                type_: light.type_.to_string(),
-                                traits: light
-                                    .available_light_modes
-                                    .iter()
-                                    .map(LightMode::to_string)
-                                    .collect(),
-                                name: Name {
-                                    default_name: vec![light.name.to_string()],
-                                    name: Some(light.name.clone()),
-                                    nicknames: vec![],
-                                },
-                                will_report_state: false,
-                                device_info: None,
-                                room_hint: None,
-                                structure_hint: None,
-                                attributes: None,
-                            })
+                            handle_sync_light(&mut response, &light);
                         }
                         &Device::Thermostat(ref thermostat) => {
                             let thermostat = thermostat.lock().unwrap();
-                            response.payload.devices.push(SyncResponseDevice {
-                                id: thermostat.id.clone(),
-                                type_: "action.devices.types.THERMOSTAT".to_string(),
-                                traits: vec![
-                                    "action.devices.traits.TemperatureSetting".to_string(),
-                                ],
-                                name: Name {
-                                    default_name: vec![thermostat.name.to_string()],
-                                    name: Some(thermostat.name.clone()),
-                                    nicknames: vec![],
-                                },
-                                // TODO: attributes.
-                                will_report_state: false,
-                                device_info: None,
-                                room_hint: None,
-                                structure_hint: None,
-                                attributes: Some(SyncResponseDeviceAttributes {
-                                    available_thermostat_modes: Some(
-                                        thermostat
-                                            .available_thermostat_modes
-                                            .iter()
-                                            .map(ToString::to_string)
-                                            .collect::<Vec<String>>()
-                                            .join(","),
-                                    ),
-                                    thermostat_temperature_unit: Some(
-                                        thermostat.thermostat_temperature_unit.to_string(),
-                                    ),
-                                    ..SyncResponseDeviceAttributes::default()
-                                }),
-                            })
+                            handle_sync_thermostat(&mut response, &thermostat);
                         }
                         &Device::Scene(ref scene) => {
                             let scene = scene.lock().unwrap();
-                            response.payload.devices.push(SyncResponseDevice {
-                                id: scene.id.clone(),
-                                type_: "action.devices.types.SCENE".to_string(),
-                                traits: vec!["action.devices.traits.Scene".to_string()],
-                                name: Name {
-                                    default_name: vec![scene.name.to_string()],
-                                    name: Some(scene.name.clone()),
-                                    nicknames: vec![],
-                                },
-                                will_report_state: false,
-                                device_info: None,
-                                room_hint: None,
-                                structure_hint: None,
-                                attributes: Some(SyncResponseDeviceAttributes {
-                                    scene_reversible: Some(scene.reversible),
-                                    ..SyncResponseDeviceAttributes::default()
-                                }),
-                            })
+                            handle_sync_scene(&mut response, &scene);
                         }
                     }
                 }
