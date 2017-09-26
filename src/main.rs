@@ -490,12 +490,22 @@ fn main() {
         loop {
             {
                 let thermostat = thermostat.lock().unwrap();
-                info!("ambient: {:?}", thermostat.status.temperature_setpoint);
-                scroller.set_text(&format!("{}°C", thermostat.status.temperature_setpoint));
-                scroller.show();
+                match thermostat.status.mode {
+                    thermostat::ThermostatMode::Off => {
+                        info!("off");
+                        scroller.set_text("--°C");
+                        scroller.show();
+                    }
+                    _ => {
+                        info!("ambient: {:?}", thermostat.status.temperature_setpoint);
+                        scroller
+                            .set_text(&format!("{}°C", thermostat.status.temperature_setpoint));
+                        scroller.show();
+                    }
+                }
             }
 
-            thread::sleep(time::Duration::from_millis(1000));
+            thread::sleep(time::Duration::from_millis(100));
         }
     });
 

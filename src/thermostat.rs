@@ -11,7 +11,7 @@ pub struct Thermostat {
     pub status: ThermostatStatus,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ThermostatMode {
     Off,
     Heat,
@@ -90,6 +90,9 @@ impl Thermostat {
     pub fn temperature_setpoint(&mut self, setpoint: f32) {
         debug!("temperature_setpoint: {:?}", setpoint);
         self.status.temperature_setpoint = setpoint;
+        if self.status.mode == ThermostatMode::Off {
+            self.status.mode = ThermostatMode::On;
+        }
         self.output();
     }
 
@@ -101,6 +104,9 @@ impl Thermostat {
         );
         self.status.temperature_setpoint_low = setpoint_low;
         self.status.temperature_setpoint_high = setpoint_high;
+        if self.status.mode == ThermostatMode::Off {
+            self.status.mode = ThermostatMode::On;
+        }
         self.output();
     }
 
