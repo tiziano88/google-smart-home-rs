@@ -2,7 +2,7 @@ use light;
 use thermostat;
 use scene;
 
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, Mutex};
 
 pub enum Device {
     Light(Arc<Mutex<light::Light>>),

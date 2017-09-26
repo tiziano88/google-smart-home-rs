@@ -47,6 +47,7 @@ impl FromStr for ThermostatMode {
 }
 
 #[derive(Debug, Clone)]
+#[allow(unused)]
 pub enum TemperatureUnit {
     C,
     F,

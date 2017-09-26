@@ -14,7 +14,7 @@ pub struct SolidColor {
 }
 
 impl ColorFunc for SolidColor {
-    fn step(&self, t: u64, current: &[rgb::RGB8]) -> [rgb::RGB8; 16] {
+    fn step(&self, _t: u64, current: &[rgb::RGB8]) -> [rgb::RGB8; 16] {
         let mut pixels = [BLACK; 16];
         for i in 0..pixels.len() {
             pixels[i] = mean(current[i], self.c, P);

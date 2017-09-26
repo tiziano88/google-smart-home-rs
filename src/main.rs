@@ -21,7 +21,7 @@ extern crate maplit;
 use std::env;
 use std::io::Read;
 use std::str::FromStr;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time;
 
@@ -476,11 +476,11 @@ fn main() {
                 let b1 = lights.color_func.step(t, b0);
                 pixels[i + offset] = b1[i];
             }
-        }
-        mote.write(&pixels);
+            mote.write(&pixels);
 
-        thread::sleep(time::Duration::from_millis(10));
-        t += 1;
+            thread::sleep(time::Duration::from_millis(10));
+            t += 1;
+        }
     });
 
     thread::spawn(move || {

@@ -1,4 +1,3 @@
-extern crate mote;
 extern crate rgb;
 
 use std::string::ToString;
@@ -31,6 +30,7 @@ impl ToString for LightMode {
     }
 }
 
+#[allow(unused)]
 pub enum LightType {
     Light,
     Outlet,
