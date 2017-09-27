@@ -354,6 +354,7 @@ fn main() {
     let mut opts = Options::new();
     opts.optopt("", "http_address", "HTTP address to listen on", "ADDRESS");
     opts.optopt("", "mote_dev", "Serial port connecting to Mote", "FILE");
+    opts.optopt("", "display_i2c", "I2C port to use as display", "N");
 
     debug!("parsing args");
     let matches = opts.parse(&args[1..]).unwrap();
@@ -363,6 +364,7 @@ fn main() {
     let mote_dev = matches
         .opt_str("mote_dev")
         .unwrap_or("/dev/ttyACM0".to_string());
+    let display_i2c = matches.opt_str("display_i2c").unwrap_or("".to_string());
     debug!("args parsed");
 
     let bedroom_lights = Arc::new(Mutex::new(Light {
@@ -492,8 +494,14 @@ fn main() {
     });
 
     thread::spawn(move || {
-        let mut display = scroll_phat_hd::display::TermDisplay::new();
-        let mut scroller = scroll_phat_hd::scroller::Scroller::new(&mut display);
+        let mut display: Box<scroll_phat_hd::display::Display> = if display_i2c == "" {
+            Box::new(scroll_phat_hd::display::TermDisplay::new())
+        } else {
+            // TODO: Parse I2C port.
+            Box::new(scroll_phat_hd::display::I2CDisplay::new(1))
+        };
+
+        let mut scroller = scroll_phat_hd::scroller::Scroller::new(&mut *display);
 
         loop {
             {

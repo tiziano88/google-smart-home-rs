@@ -6,8 +6,9 @@ set -e
 #readonly TARGET='arm-unknown-linux-gnueabihf'
 readonly TARGET='arm-unknown-linux-gnueabi'
 
-readonly REMOTE='pi@192.168.0.21'
+readonly REMOTE='pi@0.tcp.eu.ngrok.io'
+readonly PORT='10887'
 
-cargo build --target=${TARGET}
-scp target/${TARGET}/debug/smartlights ${REMOTE}:/home/pi/
+cargo build --release --target=${TARGET}
+scp -P ${PORT} target/${TARGET}/debug/smartlights ${REMOTE}:/home/pi/
 #ssh ${TARGET} RUST_BACKTRACE=1 /home/pi/smartlights
