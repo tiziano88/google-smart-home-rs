@@ -457,35 +457,27 @@ fn main() {
         let mut pixels = [BLACK; 16 * 4];
         let mut t = 0u64;
 
+        fn update_lights(
+            pixels: &mut [rgb::RGB8; 16 * 4],
+            t: u64,
+            lights: &Arc<Mutex<Light>>,
+            offset: usize,
+        ) {
+            match lights.lock() {
+                Ok(lights) => for i in 0..16 {
+                    let b0 = &pixels.clone()[offset..offset + 16];
+                    let b1 = lights.color_func.step(t, b0);
+                    pixels[i + offset] = b1[i];
+                },
+                Err(err) => error!("could not lock light mutex: {:?}", err),
+            }
+        }
+
         loop {
-            for i in 0..16 {
-                let offset = 0;
-                let lights = bedroom_lights.lock().unwrap();
-                let b0 = &pixels.clone()[offset..offset + 16];
-                let b1 = lights.color_func.step(t, b0);
-                pixels[i + offset] = b1[i];
-            }
-            for i in 0..16 {
-                let offset = 16;
-                let lights = kitchen_lights.lock().unwrap();
-                let b0 = &pixels.clone()[offset..offset + 16];
-                let b1 = lights.color_func.step(t, b0);
-                pixels[i + offset] = b1[i];
-            }
-            for i in 0..16 {
-                let offset = 32;
-                let lights = bathroom_lights.lock().unwrap();
-                let b0 = &pixels.clone()[offset..offset + 16];
-                let b1 = lights.color_func.step(t, b0);
-                pixels[i + offset] = b1[i];
-            }
-            for i in 0..16 {
-                let offset = 48;
-                let lights = living_room_lights.lock().unwrap();
-                let b0 = &pixels.clone()[offset..offset + 16];
-                let b1 = lights.color_func.step(t, b0);
-                pixels[i + offset] = b1[i];
-            }
+            update_lights(&mut pixels, t, &bedroom_lights, 0);
+            update_lights(&mut pixels, t, &kitchen_lights, 16);
+            update_lights(&mut pixels, t, &bathroom_lights, 32);
+            update_lights(&mut pixels, t, &living_room_lights, 48);
             mote.write(&pixels);
 
             thread::sleep(time::Duration::from_millis(10));
@@ -505,20 +497,25 @@ fn main() {
 
         loop {
             {
-                let thermostat = thermostat.lock().unwrap();
-                match thermostat.status.mode {
-                    thermostat::ThermostatMode::Off => {
-                        info!("off");
-                        scroller.set_text("--°C");
-                        scroller.show();
+                match thermostat.lock() {
+                    Ok(thermostat) => {
+                        match thermostat.status.mode {
+                            thermostat::ThermostatMode::Off => {
+                                scroller.set_text("--°C");
+                                scroller.show();
+                            }
+                            _ => {
+                                scroller.set_text(
+                                    &format!("{}°C", thermostat.status.temperature_setpoint),
+                                );
+                                scroller.show();
+                            }
+                        };
                     }
-                    _ => {
-                        info!("setpoint: {:?}", thermostat.status.temperature_setpoint);
-                        scroller
-                            .set_text(&format!("{}°C", thermostat.status.temperature_setpoint));
-                        scroller.show();
+                    Err(err) => {
+                        error!("could not lock thermostat mutex: {:?}", err);
                     }
-                }
+                };
             }
 
             thread::sleep(time::Duration::from_millis(100));
