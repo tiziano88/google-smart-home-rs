@@ -419,32 +419,39 @@ fn main() {
         color_func: Box::new(color::SolidColor { c: BLACK }),
     }));
 
+    let all_lights = vec![
+        bedroom_lights.clone(),
+        kitchen_lights.clone(),
+        bathroom_lights.clone(),
+        living_room_lights.clone(),
+    ];
+
     let party_mode = Arc::new(Mutex::new(Scene {
         id: "1001".to_string(),
         name: "Party mode".to_string(),
         reversible: true,
-        lights: vec![],
+        lights: all_lights.clone(),
     }));
 
     let italian_mode = Arc::new(Mutex::new(Scene {
         id: "1002".to_string(),
         name: "Italian Mode".to_string(),
         reversible: true,
-        lights: vec![],
+        lights: all_lights.clone(),
     }));
 
     let night_mode = Arc::new(Mutex::new(Scene {
         id: "1003".to_string(),
         name: "Night Mode".to_string(),
         reversible: true,
-        lights: vec![],
+        lights: all_lights.clone(),
     }));
 
     let strobe_mode = Arc::new(Mutex::new(Scene {
         id: "1004".to_string(),
         name: "Strobe Mode".to_string(),
         reversible: true,
-        lights: vec![],
+        lights: all_lights.clone(),
     }));
 
     let thermostat = Arc::new(Mutex::new(Thermostat {
