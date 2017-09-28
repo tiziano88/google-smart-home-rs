@@ -368,7 +368,7 @@ fn main() {
     debug!("args parsed");
 
     let bedroom_lights = Arc::new(Mutex::new(Light {
-        id: "11".to_string(),
+        id: "111".to_string(),
         name: "Bedroom lights".to_string(),
         status: LightStatus::default(),
         type_: LightType::Light,
@@ -381,7 +381,7 @@ fn main() {
     }));
 
     let kitchen_lights = Arc::new(Mutex::new(Light {
-        id: "22".to_string(),
+        id: "222".to_string(),
         name: "Kitchen lights".to_string(),
         status: LightStatus::default(),
         type_: LightType::Light,
@@ -394,7 +394,7 @@ fn main() {
     }));
 
     let bathroom_lights = Arc::new(Mutex::new(Light {
-        id: "33".to_string(),
+        id: "333".to_string(),
         name: "Bathroom lights".to_string(),
         status: LightStatus::default(),
         type_: LightType::Light,
@@ -407,7 +407,7 @@ fn main() {
     }));
 
     let living_room_lights = Arc::new(Mutex::new(Light {
-        id: "44".to_string(),
+        id: "444".to_string(),
         name: "Living Room lights".to_string(),
         status: LightStatus::default(),
         type_: LightType::Light,
@@ -420,9 +420,31 @@ fn main() {
     }));
 
     let party_mode = Arc::new(Mutex::new(Scene {
-        id: "55".to_string(),
+        id: "1001".to_string(),
         name: "Party mode".to_string(),
         reversible: true,
+        lights: vec![],
+    }));
+
+    let italian_mode = Arc::new(Mutex::new(Scene {
+        id: "1002".to_string(),
+        name: "Italian Mode".to_string(),
+        reversible: true,
+        lights: vec![],
+    }));
+
+    let night_mode = Arc::new(Mutex::new(Scene {
+        id: "1003".to_string(),
+        name: "Night Mode".to_string(),
+        reversible: true,
+        lights: vec![],
+    }));
+
+    let strobe_mode = Arc::new(Mutex::new(Scene {
+        id: "1004".to_string(),
+        name: "Strobe Mode".to_string(),
+        reversible: true,
+        lights: vec![],
     }));
 
     let thermostat = Arc::new(Mutex::new(Thermostat {
@@ -447,6 +469,9 @@ fn main() {
             Device::Light(bathroom_lights.clone()),
             Device::Light(living_room_lights.clone()),
             Device::Scene(party_mode.clone()),
+            Device::Scene(italian_mode.clone()),
+            Device::Scene(night_mode.clone()),
+            Device::Scene(strobe_mode.clone()),
             Device::Thermostat(thermostat.clone()),
         ],
     };
