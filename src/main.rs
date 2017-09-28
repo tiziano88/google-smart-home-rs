@@ -6,6 +6,7 @@ extern crate rgb;
 extern crate router;
 extern crate scroll_phat_hd;
 extern crate serde_json;
+extern crate staticfile;
 extern crate unicase;
 extern crate url;
 
@@ -353,6 +354,7 @@ fn main() {
 
     let mut opts = Options::new();
     opts.optopt("", "http_address", "HTTP address to listen on", "ADDRESS");
+    opts.optopt("", "index", "file to serve as index", "FILE");
     opts.optopt("", "mote_dev", "Serial port connecting to Mote", "FILE");
     opts.optopt("", "display_i2c", "I2C port to use as display", "N");
 
@@ -361,6 +363,7 @@ fn main() {
     let http_address = matches
         .opt_str("http_address")
         .unwrap_or("0.0.0.0:1234".to_string());
+    let index = matches.opt_str("index").unwrap_or("/dev/null".to_string());
     let mote_dev = matches
         .opt_str("mote_dev")
         .unwrap_or("/dev/ttyACM0".to_string());
@@ -518,6 +521,7 @@ fn main() {
     });
 
     thread::spawn(move || {
+        return;
         let mut display: Box<scroll_phat_hd::display::Display> = if display_i2c == "" {
             Box::new(scroll_phat_hd::display::UnicodeDisplay::new())
         } else {
@@ -563,13 +567,14 @@ fn main() {
         .post("/action", hub, "post action")
         .get("/action", get_action_handler, "get action")
         .options("/action", options_action_handler, "get action")
-        .get("/", index_handler, "index");
+        .get("/", staticfile::Static::new(index), "index");
     info!("Listening on {}", http_address);
     Iron::new(control).http(http_address).unwrap();
 }
 
-fn index_handler(_: &mut Request) -> IronResult<Response> {
-    Ok(Response::with((status::Ok, "index")))
+fn index_handler(r: &mut Request) -> IronResult<Response> {
+    info!("index");
+    staticfile::Static::new("/home/tzn/.xinitrc").handle(r)
 }
 
 fn get_action_handler(_: &mut Request) -> IronResult<Response> {
