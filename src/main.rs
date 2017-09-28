@@ -521,7 +521,6 @@ fn main() {
     });
 
     thread::spawn(move || {
-        return;
         let mut display: Box<scroll_phat_hd::display::Display> = if display_i2c == "" {
             Box::new(scroll_phat_hd::display::UnicodeDisplay::new())
         } else {
