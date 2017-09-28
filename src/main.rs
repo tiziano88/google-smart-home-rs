@@ -495,7 +495,7 @@ fn main() {
 
     thread::spawn(move || {
         let mut display: Box<scroll_phat_hd::display::Display> = if display_i2c == "" {
-            Box::new(scroll_phat_hd::display::TermDisplay::new())
+            Box::new(scroll_phat_hd::display::UnicodeDisplay::new())
         } else {
             // TODO: Parse I2C port.
             Box::new(scroll_phat_hd::display::I2CDisplay::new(1))
