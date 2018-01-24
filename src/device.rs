@@ -8,4 +8,5 @@ pub enum Device {
     Light(Arc<Mutex<light::Light>>),
     Thermostat(Arc<Mutex<thermostat::Thermostat>>),
     Scene(Arc<Mutex<scene::Scene>>),
+    Proxy(String),
 }

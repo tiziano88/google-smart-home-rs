@@ -136,6 +136,11 @@ fn handle_sync_scene(response: &mut SyncResponse, scene: &Scene) {
     })
 }
 
+fn handle_sync_proxy(response: &mut SyncResponse, action_url: &str) {
+    // TODO.
+    info!("sync proxy");
+}
+
 impl Handler for Hub {
     fn handle(&self, req: &mut Request) -> IronResult<Response> {
         info!("hub handler");
@@ -168,6 +173,9 @@ impl Handler for Hub {
                         &Device::Scene(ref scene) => {
                             let scene = scene.lock().unwrap();
                             handle_sync_scene(&mut response, &scene);
+                        }
+                        &Device::Proxy(ref action_url) => {
+                            handle_sync_proxy(&mut response, &action_url);
                         }
                     }
                 }
@@ -209,9 +217,11 @@ impl Handler for Hub {
                                         );
                                     }
                                 }
-                                &Device::Scene(ref _scene) => {}
+                                &Device::Scene(_) => {}
+                                &Device::Proxy(_) => {}
                             }
                         }
+                        // TODO: Always send to all proxies.
                     }
                 }
 
@@ -314,8 +324,10 @@ impl Handler for Hub {
                                                 );
                                             }
                                         }
+                                        &Device::Proxy(_) => {}
                                     }
                                 }
+                                // TODO: Always send to all proxies.
                             }
                         }
                     }
