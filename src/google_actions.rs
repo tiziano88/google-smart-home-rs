@@ -17,8 +17,7 @@ pub struct SyncResponseDevice {
     #[serde(skip)]
     pub device_info: Option<DeviceInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub attributes:
-        Option<SyncResponseDeviceAttributes>,
+    pub attributes: Option<SyncResponseDeviceAttributes>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, PartialEq, Eq)]

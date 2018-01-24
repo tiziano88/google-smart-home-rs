@@ -540,9 +540,10 @@ fn main() {
                                 scroller.show();
                             }
                             _ => {
-                                scroller.set_text(
-                                    &format!("{}°C", thermostat.status.temperature_setpoint),
-                                );
+                                scroller.set_text(&format!(
+                                    "{}°C",
+                                    thermostat.status.temperature_setpoint
+                                ));
                                 scroller.show();
                             }
                         };
@@ -583,8 +584,8 @@ fn get_action_handler(_: &mut Request) -> IronResult<Response> {
 fn options_action_handler(_: &mut Request) -> IronResult<Response> {
     let mut rsp = Response::with((status::Ok, "options"));
     rsp.headers.set(AccessControlAllowOrigin::Any);
-    rsp.headers.set(AccessControlAllowHeaders(
-        vec![UniCase("Content-Type".to_string())],
-    ));
+    rsp.headers.set(AccessControlAllowHeaders(vec![
+        UniCase("Content-Type".to_string()),
+    ]));
     Ok(rsp)
 }
