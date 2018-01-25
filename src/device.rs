@@ -12,7 +12,7 @@ pub enum Device {
     Proxy(String),
 }
 
-pub trait DeviceT {
+pub trait DeviceT: Send + Sync {
     fn id(&self) -> String;
     fn sync(&self) -> Option<SyncResponseDevice>;
     fn query(&self) -> Option<Params>;

@@ -12,7 +12,7 @@ pub const WHITE: rgb::RGB8 = rgb::RGB8 {
 
 const P: f32 = 0.9;
 
-pub trait ColorFunc: Send {
+pub trait ColorFunc: Send + Sync {
     fn step(&self, t: u64, current: &[rgb::RGB8]) -> [rgb::RGB8; 16];
     fn color(&self) -> rgb::RGB8;
 }

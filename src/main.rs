@@ -57,7 +57,7 @@ mod oauth;
 const BLACK: rgb::RGB8 = rgb::RGB8 { r: 0, g: 0, b: 0 };
 
 struct Hub {
-    devices: Vec<Device>,
+    devices: Vec<Arc<Mutex<DeviceT>>>,
 }
 
 fn handle_sync_proxy(response: &mut SyncResponse, action_url: &str) {
@@ -85,23 +85,8 @@ impl Handler for Hub {
                 };
 
                 for device in &self.devices {
-                    match device {
-                        &Device::Light(ref light) => {
-                            let light = light.lock().unwrap();
-                            response.payload.devices.push(light.sync().unwrap());
-                        }
-                        &Device::Thermostat(ref thermostat) => {
-                            let thermostat = thermostat.lock().unwrap();
-                            response.payload.devices.push(thermostat.sync().unwrap());
-                        }
-                        &Device::Scene(ref scene) => {
-                            let scene = scene.lock().unwrap();
-                            response.payload.devices.push(scene.sync().unwrap());
-                        }
-                        &Device::Proxy(ref action_url) => {
-                            handle_sync_proxy(&mut response, &action_url);
-                        }
-                    }
+                    let device = device.lock().unwrap();
+                    response.payload.devices.push(device.sync().unwrap());
                 }
 
                 let res = serde_json::to_string(&response).unwrap_or("".to_string());
@@ -122,27 +107,12 @@ impl Handler for Hub {
                 if let Some(payload) = input.payload {
                     for request_device in payload.devices {
                         for device in &self.devices {
-                            match device {
-                                &Device::Light(ref light) => {
-                                    let light = light.lock().unwrap();
-                                    if light.id == request_device.id {
-                                        response
-                                            .payload
-                                            .devices
-                                            .insert(light.id.clone(), light.query().unwrap());
-                                    }
-                                }
-                                &Device::Thermostat(ref thermostat) => {
-                                    let thermostat = thermostat.lock().unwrap();
-                                    if thermostat.id == request_device.id {
-                                        response.payload.devices.insert(
-                                            thermostat.id.clone(),
-                                            thermostat.query().unwrap(),
-                                        );
-                                    }
-                                }
-                                &Device::Scene(_) => {}
-                                &Device::Proxy(_) => {}
+                            let device = device.lock().unwrap();
+                            if request_device.id == device.id() {
+                                response
+                                    .payload
+                                    .devices
+                                    .insert(device.id(), device.query().unwrap());
                             }
                         }
                         // TODO: Always send to all proxies.
@@ -174,32 +144,12 @@ impl Handler for Hub {
                             for request_device in &command.devices {
                                 debug!("request_device: {:?}", request_device);
                                 for device in &self.devices {
-                                    match device {
-                                        &Device::Light(ref light) => {
-                                            let mut light = light.lock().unwrap();
-                                            if light.id == request_device.id {
-                                                response.payload.commands.push(
-                                                    light.execute(&execution.params).unwrap(),
-                                                );
-                                            }
-                                        }
-                                        &Device::Thermostat(ref thermostat) => {
-                                            let mut thermostat = thermostat.lock().unwrap();
-                                            if thermostat.id == request_device.id {
-                                                response.payload.commands.push(
-                                                    thermostat.execute(&execution.params).unwrap(),
-                                                );
-                                            }
-                                        }
-                                        &Device::Scene(ref scene) => {
-                                            let mut scene = scene.lock().unwrap();
-                                            if scene.id == request_device.id {
-                                                response.payload.commands.push(
-                                                    scene.execute(&execution.params).unwrap(),
-                                                );
-                                            }
-                                        }
-                                        &Device::Proxy(_) => {}
+                                    let mut device = device.lock().unwrap();
+                                    if request_device.id == device.id() {
+                                        response
+                                            .payload
+                                            .commands
+                                            .push(device.execute(&execution.params).unwrap());
                                     }
                                 }
                                 // TODO: Always send to all proxies.
@@ -361,15 +311,15 @@ fn main() {
 
     let hub = Hub {
         devices: vec![
-            Device::Light(bedroom_lights.clone()),
-            Device::Light(kitchen_lights.clone()),
-            Device::Light(bathroom_lights.clone()),
-            Device::Light(living_room_lights.clone()),
-            Device::Scene(party_mode.clone()),
-            Device::Scene(italian_mode.clone()),
-            Device::Scene(night_mode.clone()),
-            Device::Scene(strobe_mode.clone()),
-            Device::Thermostat(thermostat.clone()),
+            bedroom_lights.clone(),
+            kitchen_lights.clone(),
+            bathroom_lights.clone(),
+            living_room_lights.clone(),
+            party_mode.clone(),
+            italian_mode.clone(),
+            night_mode.clone(),
+            strobe_mode.clone(),
+            thermostat.clone(),
         ],
     };
 
