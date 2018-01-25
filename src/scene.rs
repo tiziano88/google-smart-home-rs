@@ -1,6 +1,9 @@
 use color;
 use light;
 
+use device::DeviceT;
+use google_actions::{ExecuteResponseCommand, Name, Params, SyncResponseDevice,
+                     SyncResponseDeviceAttributes};
 use std::sync::{Arc, Mutex};
 
 pub struct Scene {
@@ -59,5 +62,45 @@ impl Scene {
             }
             _ => {}
         };
+    }
+}
+
+impl DeviceT for Scene {
+    fn id(&self) -> String {
+        self.id.clone()
+    }
+
+    fn sync(&self) -> Option<SyncResponseDevice> {
+        Option::Some(SyncResponseDevice {
+            id: self.id(),
+            type_: "action.devices.types.SCENE".to_string(),
+            traits: vec!["action.devices.traits.Scene".to_string()],
+            name: Name {
+                default_name: vec![self.name.to_string()],
+                name: Some(self.name.clone()),
+                nicknames: vec![],
+            },
+            will_report_state: false,
+            device_info: None,
+            room_hint: None,
+            structure_hint: None,
+            attributes: Some(SyncResponseDeviceAttributes {
+                scene_reversible: Some(self.reversible),
+                ..SyncResponseDeviceAttributes::default()
+            }),
+        })
+    }
+
+    fn query(&self) -> Option<Params> {
+        Option::None
+    }
+
+    fn execute(&mut self, params: &Params) -> Option<ExecuteResponseCommand> {
+        self.activate_scene(params.deactivate.unwrap_or(false));
+        Option::Some(ExecuteResponseCommand {
+            ids: vec![self.id()],
+            status: "SUCCESS".to_string(),
+            states: Params::default(),
+        })
     }
 }

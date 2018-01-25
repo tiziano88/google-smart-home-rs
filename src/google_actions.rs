@@ -251,7 +251,6 @@ fn test_query_request() {
     assert_eq!(expected_req, parsed_req);
 }
 
-
 #[test]
 fn test_execute_request() {
     let json_req = r#"

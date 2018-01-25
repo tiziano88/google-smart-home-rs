@@ -1,3 +1,6 @@
+use device::DeviceT;
+use google_actions::{ExecuteResponseCommand, Name, Params, SyncResponseDevice,
+                     SyncResponseDeviceAttributes};
 use std::str::FromStr;
 use std::string::ToString;
 
@@ -99,8 +102,7 @@ impl Thermostat {
     pub fn temperature_set_range(&mut self, setpoint_low: f32, setpoint_high: f32) {
         debug!(
             "temperature_set_range: {:?} - {:?}",
-            setpoint_low,
-            setpoint_high
+            setpoint_low, setpoint_high
         );
         self.status.temperature_setpoint_low = setpoint_low;
         self.status.temperature_setpoint_high = setpoint_high;
@@ -118,5 +120,66 @@ impl Thermostat {
 
     fn output(&mut self) {
         // TODO
+    }
+}
+
+impl DeviceT for Thermostat {
+    fn id(&self) -> String {
+        self.id.clone()
+    }
+
+    fn sync(&self) -> Option<SyncResponseDevice> {
+        Option::Some(SyncResponseDevice {
+            id: self.id(),
+            type_: "action.devices.types.THERMOSTAT".to_string(),
+            traits: vec!["action.devices.traits.TemperatureSetting".to_string()],
+            name: Name {
+                default_name: vec![self.name.to_string()],
+                name: Some(self.name.clone()),
+                nicknames: vec![],
+            },
+            // TODO: attributes.
+            will_report_state: false,
+            device_info: None,
+            room_hint: None,
+            structure_hint: None,
+            attributes: Some(SyncResponseDeviceAttributes {
+                available_thermostat_modes: Some(
+                    self.available_thermostat_modes
+                        .iter()
+                        .map(ToString::to_string)
+                        .collect::<Vec<String>>()
+                        .join(","),
+                ),
+                thermostat_temperature_unit: Some(self.thermostat_temperature_unit.to_string()),
+                ..SyncResponseDeviceAttributes::default()
+            }),
+        })
+    }
+
+    fn query(&self) -> Option<Params> {
+        Option::Some(self.status.clone().into())
+    }
+
+    fn execute(&mut self, params: &Params) -> Option<ExecuteResponseCommand> {
+        if let Some(s) = params.thermostat_temperature_setpoint {
+            self.temperature_setpoint(s);
+        }
+        if let (Some(low), Some(high)) = (
+            params.thermostat_temperature_setpoint_low,
+            params.thermostat_temperature_setpoint_high,
+        ) {
+            self.temperature_set_range(low, high);
+        }
+        if let Some(ref mode) = params.thermostat_mode {
+            if let Ok(mode) = ThermostatMode::from_str(mode) {
+                self.thermostat_set_mode(mode);
+            }
+        }
+        Option::Some(ExecuteResponseCommand {
+            ids: vec![self.id()],
+            status: "SUCCESS".to_string(),
+            states: self.status.clone().into(),
+        })
     }
 }

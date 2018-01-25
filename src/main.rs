@@ -36,10 +36,8 @@ use router::Router;
 use unicase::UniCase;
 
 mod google_actions;
-use google_actions::{ActionRequest, ExecuteResponse, ExecuteResponseCommand,
-                     ExecuteResponsePayload, Name, QueryResponse, QueryResponsePayload,
-                     SyncResponse, SyncResponseDevice, SyncResponseDeviceAttributes,
-                     SyncResponsePayload};
+use google_actions::{ActionRequest, ExecuteResponse, ExecuteResponsePayload, QueryResponse,
+                     QueryResponsePayload, SyncResponse, SyncResponsePayload};
 
 mod light;
 use light::{Light, LightMode, LightStatus, LightType};
@@ -51,7 +49,7 @@ mod scene;
 use scene::Scene;
 
 mod device;
-use device::Device;
+use device::{Device, DeviceT};
 
 mod color;
 
@@ -61,79 +59,6 @@ const BLACK: rgb::RGB8 = rgb::RGB8 { r: 0, g: 0, b: 0 };
 
 struct Hub {
     devices: Vec<Device>,
-}
-
-fn handle_sync_light(response: &mut SyncResponse, light: &Light) {
-    response.payload.devices.push(SyncResponseDevice {
-        id: light.id.clone(),
-        type_: light.type_.to_string(),
-        traits: light
-            .available_light_modes
-            .iter()
-            .map(LightMode::to_string)
-            .collect(),
-        name: Name {
-            default_name: vec![light.name.to_string()],
-            name: Some(light.name.clone()),
-            nicknames: vec![],
-        },
-        will_report_state: false,
-        device_info: None,
-        room_hint: None,
-        structure_hint: None,
-        attributes: None,
-    })
-}
-
-fn handle_sync_thermostat(response: &mut SyncResponse, thermostat: &Thermostat) {
-    response.payload.devices.push(SyncResponseDevice {
-        id: thermostat.id.clone(),
-        type_: "action.devices.types.THERMOSTAT".to_string(),
-        traits: vec!["action.devices.traits.TemperatureSetting".to_string()],
-        name: Name {
-            default_name: vec![thermostat.name.to_string()],
-            name: Some(thermostat.name.clone()),
-            nicknames: vec![],
-        },
-        // TODO: attributes.
-        will_report_state: false,
-        device_info: None,
-        room_hint: None,
-        structure_hint: None,
-        attributes: Some(SyncResponseDeviceAttributes {
-            available_thermostat_modes: Some(
-                thermostat
-                    .available_thermostat_modes
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect::<Vec<String>>()
-                    .join(","),
-            ),
-            thermostat_temperature_unit: Some(thermostat.thermostat_temperature_unit.to_string()),
-            ..SyncResponseDeviceAttributes::default()
-        }),
-    })
-}
-
-fn handle_sync_scene(response: &mut SyncResponse, scene: &Scene) {
-    response.payload.devices.push(SyncResponseDevice {
-        id: scene.id.clone(),
-        type_: "action.devices.types.SCENE".to_string(),
-        traits: vec!["action.devices.traits.Scene".to_string()],
-        name: Name {
-            default_name: vec![scene.name.to_string()],
-            name: Some(scene.name.clone()),
-            nicknames: vec![],
-        },
-        will_report_state: false,
-        device_info: None,
-        room_hint: None,
-        structure_hint: None,
-        attributes: Some(SyncResponseDeviceAttributes {
-            scene_reversible: Some(scene.reversible),
-            ..SyncResponseDeviceAttributes::default()
-        }),
-    })
 }
 
 fn handle_sync_proxy(response: &mut SyncResponse, action_url: &str) {
@@ -164,15 +89,15 @@ impl Handler for Hub {
                     match device {
                         &Device::Light(ref light) => {
                             let light = light.lock().unwrap();
-                            handle_sync_light(&mut response, &light);
+                            response.payload.devices.push(light.sync().unwrap());
                         }
                         &Device::Thermostat(ref thermostat) => {
                             let thermostat = thermostat.lock().unwrap();
-                            handle_sync_thermostat(&mut response, &thermostat);
+                            response.payload.devices.push(thermostat.sync().unwrap());
                         }
                         &Device::Scene(ref scene) => {
                             let scene = scene.lock().unwrap();
-                            handle_sync_scene(&mut response, &scene);
+                            response.payload.devices.push(scene.sync().unwrap());
                         }
                         &Device::Proxy(ref action_url) => {
                             handle_sync_proxy(&mut response, &action_url);
@@ -205,7 +130,7 @@ impl Handler for Hub {
                                         response
                                             .payload
                                             .devices
-                                            .insert(light.id.clone(), light.status.clone().into());
+                                            .insert(light.id.clone(), light.query().unwrap());
                                     }
                                 }
                                 &Device::Thermostat(ref thermostat) => {
@@ -213,7 +138,7 @@ impl Handler for Hub {
                                     if thermostat.id == request_device.id {
                                         response.payload.devices.insert(
                                             thermostat.id.clone(),
-                                            thermostat.status.clone().into(),
+                                            thermostat.query().unwrap(),
                                         );
                                     }
                                 }
@@ -254,73 +179,24 @@ impl Handler for Hub {
                                         &Device::Light(ref light) => {
                                             let mut light = light.lock().unwrap();
                                             if light.id == request_device.id {
-                                                if let Some(s) = execution.params.on {
-                                                    light.set_on(s);
-                                                }
-                                                if let Some(s) = execution.params.brightness {
-                                                    light.set_brightness(s);
-                                                }
-                                                if let Some(ref s) = execution.params.color {
-                                                    if let Some(s) = s.spectrum_rgb {
-                                                        light.set_color(to_rgb(s));
-                                                    }
-                                                }
                                                 response.payload.commands.push(
-                                                    ExecuteResponseCommand {
-                                                        ids: vec![light.id.clone()],
-                                                        status: "SUCCESS".to_string(),
-                                                        states: light.status.clone().into(),
-                                                    },
+                                                    light.execute(&execution.params).unwrap(),
                                                 );
                                             }
                                         }
                                         &Device::Thermostat(ref thermostat) => {
                                             let mut thermostat = thermostat.lock().unwrap();
                                             if thermostat.id == request_device.id {
-                                                if let Some(s) =
-                                                    execution.params.thermostat_temperature_setpoint
-                                                {
-                                                    thermostat.temperature_setpoint(s);
-                                                }
-                                                if let (Some(low), Some(high)) = (
-                                                    execution
-                                                        .params
-                                                        .thermostat_temperature_setpoint_low,
-                                                    execution
-                                                        .params
-                                                        .thermostat_temperature_setpoint_high,
-                                                ) {
-                                                    thermostat.temperature_set_range(low, high);
-                                                }
-                                                if let Some(ref mode) =
-                                                    execution.params.thermostat_mode
-                                                {
-                                                    if let Ok(mode) = ThermostatMode::from_str(mode)
-                                                    {
-                                                        thermostat.thermostat_set_mode(mode);
-                                                    }
-                                                }
                                                 response.payload.commands.push(
-                                                    ExecuteResponseCommand {
-                                                        ids: vec![thermostat.id.clone()],
-                                                        status: "SUCCESS".to_string(),
-                                                        states: thermostat.status.clone().into(),
-                                                    },
+                                                    thermostat.execute(&execution.params).unwrap(),
                                                 );
                                             }
                                         }
                                         &Device::Scene(ref scene) => {
                                             let mut scene = scene.lock().unwrap();
                                             if scene.id == request_device.id {
-                                                scene.activate_scene(
-                                                    execution.params.deactivate.unwrap_or(false),
-                                                );
                                                 response.payload.commands.push(
-                                                    ExecuteResponseCommand {
-                                                        ids: vec![scene.id.clone()],
-                                                        status: "SUCCESS".to_string(),
-                                                        states: google_actions::Params::default(),
-                                                    },
+                                                    scene.execute(&execution.params).unwrap(),
                                                 );
                                             }
                                         }

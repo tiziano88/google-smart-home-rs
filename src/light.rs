@@ -3,7 +3,9 @@ extern crate rgb;
 use std::string::ToString;
 
 use color;
+use device::DeviceT;
 use google_actions;
+use google_actions::{ExecuteResponseCommand, Name, Params, SyncResponseDevice};
 
 pub struct Light {
     pub id: String,
@@ -141,5 +143,55 @@ impl Light {
             b: scaled_b,
         };
         self.color_func = Box::new(color::SolidColor { c: c });
+    }
+}
+
+impl DeviceT for Light {
+    fn id(&self) -> String {
+        self.id.clone()
+    }
+
+    fn sync(&self) -> Option<SyncResponseDevice> {
+        Option::Some(SyncResponseDevice {
+            id: self.id.clone(),
+            type_: self.type_.to_string(),
+            traits: self.available_light_modes
+                .iter()
+                .map(LightMode::to_string)
+                .collect(),
+            name: Name {
+                default_name: vec![self.name.to_string()],
+                name: Some(self.name.clone()),
+                nicknames: vec![],
+            },
+            will_report_state: false,
+            device_info: None,
+            room_hint: None,
+            structure_hint: None,
+            attributes: None,
+        })
+    }
+
+    fn query(&self) -> Option<Params> {
+        Option::Some(self.status.clone().into())
+    }
+
+    fn execute(&mut self, params: &Params) -> Option<ExecuteResponseCommand> {
+        if let Some(s) = params.on {
+            self.set_on(s);
+        }
+        if let Some(s) = params.brightness {
+            self.set_brightness(s);
+        }
+        if let Some(ref s) = params.color {
+            if let Some(s) = s.spectrum_rgb {
+                self.set_color(to_rgb(s));
+            }
+        }
+        Option::Some(ExecuteResponseCommand {
+            ids: vec![self.id()],
+            status: "SUCCESS".to_string(),
+            states: self.status.clone().into(),
+        })
     }
 }
