@@ -70,96 +70,103 @@ impl Handler for Hub {
         info!("action_request: {:?}", action_request);
 
         for input in action_request.inputs {
-            if input.intent == "action.devices.SYNC" {
-                let mut response = SyncResponse {
-                    request_id: action_request.request_id.clone(),
-                    payload: SyncResponsePayload {
-                        agent_user_id: "1111".to_string(),
-                        devices: vec![],
-                    },
-                };
+            match input.intent.as_ref() {
+                "action.devices.SYNC" => {
+                    let mut response = SyncResponse {
+                        request_id: action_request.request_id.clone(),
+                        payload: SyncResponsePayload {
+                            agent_user_id: "1111".to_string(),
+                            devices: vec![],
+                        },
+                    };
 
-                for device in &self.devices {
-                    let device = device.lock().unwrap();
-                    response.payload.devices.push(device.sync().unwrap());
-                }
-
-                let res = serde_json::to_string(&response).unwrap_or("".to_string());
-                debug!("action_response: {:?}", res);
-                let mut rsp = Response::with((status::Ok, res));
-                rsp.headers.set(ContentType::json());
-                // For browser access.
-                rsp.headers.set(AccessControlAllowOrigin::Any);
-                return Ok(rsp);
-            } else if input.intent == "action.devices.QUERY" {
-                let mut response = QueryResponse {
-                    request_id: action_request.request_id.clone(),
-                    payload: QueryResponsePayload {
-                        devices: btreemap!{},
-                    },
-                };
-
-                if let Some(payload) = input.payload {
-                    for request_device in payload.devices {
-                        for device in &self.devices {
-                            let device = device.lock().unwrap();
-                            if request_device.id == device.id() {
-                                response
-                                    .payload
-                                    .devices
-                                    .insert(device.id(), device.query().unwrap());
-                            }
-                        }
-                        // TODO: Always send to all proxies.
+                    for device in &self.devices {
+                        let device = device.lock().unwrap();
+                        response.payload.devices.push(device.sync().unwrap());
                     }
+
+                    let res = serde_json::to_string(&response).unwrap_or("".to_string());
+                    debug!("action_response: {:?}", res);
+                    let mut rsp = Response::with((status::Ok, res));
+                    rsp.headers.set(ContentType::json());
+                    // For browser access.
+                    rsp.headers.set(AccessControlAllowOrigin::Any);
+                    return Ok(rsp);
                 }
+                "action.devices.QUERY" => {
+                    let mut response = QueryResponse {
+                        request_id: action_request.request_id.clone(),
+                        payload: QueryResponsePayload {
+                            devices: btreemap!{},
+                        },
+                    };
 
-                let res = serde_json::to_string(&response).unwrap_or("".to_string());
-                debug!("action_response: {:?}", res);
-                let mut rsp = Response::with((status::Ok, res));
-                rsp.headers.set(ContentType::json());
-                // For browser access.
-                rsp.headers.set(AccessControlAllowOrigin::Any);
-                return Ok(rsp);
-            } else if input.intent == "action.devices.EXECUTE" {
-                let mut response = ExecuteResponse {
-                    request_id: action_request.request_id.clone(),
-                    payload: ExecuteResponsePayload {
-                        error_code: None,
-                        debug_string: None,
-                        commands: vec![],
-                    },
-                };
-
-                if let Some(ref p) = input.payload {
-                    for command in &p.commands {
-                        debug!("command: {:?}", command);
-                        for execution in &command.execution {
-                            debug!("execution: {:?}", execution);
-                            for request_device in &command.devices {
-                                debug!("request_device: {:?}", request_device);
-                                for device in &self.devices {
-                                    let mut device = device.lock().unwrap();
-                                    if request_device.id == device.id() {
-                                        response
-                                            .payload
-                                            .commands
-                                            .push(device.execute(&execution.params).unwrap());
-                                    }
+                    if let Some(payload) = input.payload {
+                        for request_device in payload.devices {
+                            for device in &self.devices {
+                                let device = device.lock().unwrap();
+                                if request_device.id == device.id() {
+                                    response
+                                        .payload
+                                        .devices
+                                        .insert(device.id(), device.query().unwrap());
                                 }
-                                // TODO: Always send to all proxies.
+                            }
+                            // TODO: Always send to all proxies.
+                        }
+                    }
+
+                    let res = serde_json::to_string(&response).unwrap_or("".to_string());
+                    debug!("action_response: {:?}", res);
+                    let mut rsp = Response::with((status::Ok, res));
+                    rsp.headers.set(ContentType::json());
+                    // For browser access.
+                    rsp.headers.set(AccessControlAllowOrigin::Any);
+                    return Ok(rsp);
+                }
+                "action.devices.EXECUTE" => {
+                    let mut response = ExecuteResponse {
+                        request_id: action_request.request_id.clone(),
+                        payload: ExecuteResponsePayload {
+                            error_code: None,
+                            debug_string: None,
+                            commands: vec![],
+                        },
+                    };
+
+                    if let Some(ref p) = input.payload {
+                        for command in &p.commands {
+                            debug!("command: {:?}", command);
+                            for execution in &command.execution {
+                                debug!("execution: {:?}", execution);
+                                for request_device in &command.devices {
+                                    debug!("request_device: {:?}", request_device);
+                                    for device in &self.devices {
+                                        let mut device = device.lock().unwrap();
+                                        if request_device.id == device.id() {
+                                            response
+                                                .payload
+                                                .commands
+                                                .push(device.execute(&execution.params).unwrap());
+                                        }
+                                    }
+                                    // TODO: Always send to all proxies.
+                                }
                             }
                         }
                     }
-                }
 
-                let res = serde_json::to_string(&response).unwrap_or("".to_string());
-                debug!("action_response: {:?}", res);
-                let mut rsp = Response::with((status::Ok, res));
-                rsp.headers.set(ContentType::json());
-                // For browser access.
-                rsp.headers.set(AccessControlAllowOrigin::Any);
-                return Ok(rsp);
+                    let res = serde_json::to_string(&response).unwrap_or("".to_string());
+                    debug!("action_response: {:?}", res);
+                    let mut rsp = Response::with((status::Ok, res));
+                    rsp.headers.set(ContentType::json());
+                    // For browser access.
+                    rsp.headers.set(AccessControlAllowOrigin::Any);
+                    return Ok(rsp);
+                }
+                i => {
+                    debug!("unsupported intent: {:?}", i);
+                }
             }
         }
 

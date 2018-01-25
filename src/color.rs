@@ -48,8 +48,22 @@ pub struct ItalianFlag {}
 impl ColorFunc for ItalianFlag {
     fn step(&self, _t: u64, _current: &[rgb::RGB8]) -> [rgb::RGB8; 16] {
         [
-            GREEN, GREEN, GREEN, GREEN, GREEN, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, RED, RED,
-            RED, RED, RED,
+            GREEN,
+            GREEN,
+            GREEN,
+            GREEN,
+            GREEN,
+            WHITE,
+            WHITE,
+            WHITE,
+            WHITE,
+            WHITE,
+            WHITE,
+            RED,
+            RED,
+            RED,
+            RED,
+            RED,
         ]
     }
 

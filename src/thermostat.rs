@@ -102,7 +102,8 @@ impl Thermostat {
     pub fn temperature_set_range(&mut self, setpoint_low: f32, setpoint_high: f32) {
         debug!(
             "temperature_set_range: {:?} - {:?}",
-            setpoint_low, setpoint_high
+            setpoint_low,
+            setpoint_high
         );
         self.status.temperature_setpoint_low = setpoint_low;
         self.status.temperature_setpoint_high = setpoint_high;
