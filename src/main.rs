@@ -362,28 +362,26 @@ fn main() {
         let mut scroller = scroll_phat_hd::scroller::Scroller::new(&mut *display);
 
         loop {
-            {
-                match thermostat.lock() {
-                    Ok(thermostat) => {
-                        match thermostat.status.mode {
-                            thermostat::ThermostatMode::Off => {
-                                scroller.set_text("--°C");
-                                scroller.show();
-                            }
-                            _ => {
-                                scroller.set_text(&format!(
-                                    "{}°C",
-                                    thermostat.status.temperature_setpoint
-                                ));
-                                scroller.show();
-                            }
-                        };
-                    }
-                    Err(err) => {
-                        error!("could not lock thermostat mutex: {:?}", err);
-                    }
-                };
-            }
+            match thermostat.lock() {
+                Ok(thermostat) => {
+                    match thermostat.status.mode {
+                        thermostat::ThermostatMode::Off => {
+                            scroller.set_text("--°C");
+                            scroller.show();
+                        }
+                        _ => {
+                            scroller.set_text(&format!(
+                                "{}°C",
+                                thermostat.status.temperature_setpoint
+                            ));
+                            scroller.show();
+                        }
+                    };
+                }
+                Err(err) => {
+                    error!("could not lock thermostat mutex: {:?}", err);
+                }
+            };
 
             thread::sleep(time::Duration::from_millis(100));
         }
