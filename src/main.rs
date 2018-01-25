@@ -21,7 +21,6 @@ extern crate maplit;
 
 use std::env;
 use std::io::Read;
-use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time;
