@@ -46,7 +46,7 @@ fn mean(x: rgb::RGB8, y: rgb::RGB8, p: f32) -> rgb::RGB8 {
 pub struct ItalianFlag {}
 
 impl ColorFunc for ItalianFlag {
-    fn step(&self, _t: u64, current: &[rgb::RGB8]) -> [rgb::RGB8; 16] {
+    fn step(&self, _t: u64, _current: &[rgb::RGB8]) -> [rgb::RGB8; 16] {
         [
             GREEN, GREEN, GREEN, GREEN, GREEN, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, RED, RED,
             RED, RED, RED,
@@ -63,7 +63,7 @@ pub struct Strobe {
 }
 
 impl ColorFunc for Strobe {
-    fn step(&self, t: u64, current: &[rgb::RGB8]) -> [rgb::RGB8; 16] {
+    fn step(&self, t: u64, _current: &[rgb::RGB8]) -> [rgb::RGB8; 16] {
         if t % (self.period * 2) < self.period {
             [WHITE; 16]
         } else {
@@ -81,7 +81,7 @@ pub struct Rainbow {
 }
 
 impl ColorFunc for Rainbow {
-    fn step(&self, t: u64, current: &[rgb::RGB8]) -> [rgb::RGB8; 16] {
+    fn step(&self, t: u64, _current: &[rgb::RGB8]) -> [rgb::RGB8; 16] {
         if t % (self.period * 2) < self.period {
             [WHITE; 16]
         } else {

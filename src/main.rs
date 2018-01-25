@@ -60,11 +60,6 @@ struct Hub {
     devices: Vec<Arc<Mutex<Device>>>,
 }
 
-fn handle_sync_proxy(response: &mut SyncResponse, action_url: &str) {
-    // TODO.
-    info!("sync proxy");
-}
-
 impl Handler for Hub {
     fn handle(&self, req: &mut Request) -> IronResult<Response> {
         info!("hub handler");
@@ -173,14 +168,6 @@ impl Handler for Hub {
         // For browser access.
         rsp.headers.set(AccessControlAllowOrigin::Any);
         Ok(rsp)
-    }
-}
-
-fn to_rgb(c: u64) -> rgb::RGB8 {
-    rgb::RGB8 {
-        r: ((c & 0xFF0000) >> 16) as u8,
-        g: ((c & 0x00FF00) >> 8) as u8,
-        b: ((c & 0x0000FF) >> 0) as u8,
     }
 }
 
@@ -407,11 +394,6 @@ fn main() {
         .get("/", staticfile::Static::new(index), "index");
     info!("Listening on {}", http_address);
     Iron::new(control).http(http_address).unwrap();
-}
-
-fn index_handler(r: &mut Request) -> IronResult<Response> {
-    info!("index");
-    staticfile::Static::new("/home/tzn/.xinitrc").handle(r)
 }
 
 fn get_action_handler(_: &mut Request) -> IronResult<Response> {
