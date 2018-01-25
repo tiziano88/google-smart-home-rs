@@ -1,5 +1,7 @@
 extern crate env_logger;
+extern crate futures;
 extern crate getopts;
+extern crate hyper;
 extern crate iron;
 extern crate mote;
 extern crate rgb;
@@ -7,6 +9,7 @@ extern crate router;
 extern crate scroll_phat_hd;
 extern crate serde_json;
 extern crate staticfile;
+extern crate tokio_core;
 extern crate unicase;
 extern crate url;
 
@@ -49,6 +52,9 @@ use scene::Scene;
 
 mod device;
 use device::Device;
+
+mod proxy;
+use proxy::Proxy;
 
 mod color;
 
