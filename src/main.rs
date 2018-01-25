@@ -48,7 +48,7 @@ mod scene;
 use scene::Scene;
 
 mod device;
-use device::{Device, DeviceT};
+use device::Device;
 
 mod color;
 
@@ -57,7 +57,7 @@ mod oauth;
 const BLACK: rgb::RGB8 = rgb::RGB8 { r: 0, g: 0, b: 0 };
 
 struct Hub {
-    devices: Vec<Arc<Mutex<DeviceT>>>,
+    devices: Vec<Arc<Mutex<Device>>>,
 }
 
 fn handle_sync_proxy(response: &mut SyncResponse, action_url: &str) {

@@ -3,7 +3,7 @@ extern crate rgb;
 use std::string::ToString;
 
 use color;
-use device::DeviceT;
+use device::Device;
 use google_actions;
 use google_actions::{ExecuteResponseCommand, Name, Params, SyncResponseDevice};
 
@@ -146,7 +146,7 @@ impl Light {
     }
 }
 
-impl DeviceT for Light {
+impl Device for Light {
     fn id(&self) -> String {
         self.id.clone()
     }

@@ -1,7 +1,7 @@
 use color;
 use light;
 
-use device::DeviceT;
+use device::Device;
 use google_actions::{ExecuteResponseCommand, Name, Params, SyncResponseDevice,
                      SyncResponseDeviceAttributes};
 use std::sync::{Arc, Mutex};
@@ -65,7 +65,7 @@ impl Scene {
     }
 }
 
-impl DeviceT for Scene {
+impl Device for Scene {
     fn id(&self) -> String {
         self.id.clone()
     }

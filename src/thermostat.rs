@@ -1,4 +1,4 @@
-use device::DeviceT;
+use device::Device;
 use google_actions::{ExecuteResponseCommand, Name, Params, SyncResponseDevice,
                      SyncResponseDeviceAttributes};
 use std::str::FromStr;
@@ -123,7 +123,7 @@ impl Thermostat {
     }
 }
 
-impl DeviceT for Thermostat {
+impl Device for Thermostat {
     fn id(&self) -> String {
         self.id.clone()
     }
