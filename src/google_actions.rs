@@ -1,5 +1,3 @@
-extern crate serde_json;
-
 use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
@@ -10,9 +8,12 @@ pub struct SyncResponseDevice {
     pub name: Name,
     pub traits: Vec<String>,
     pub will_report_state: bool,
-    #[serde(skip)] pub room_hint: Option<String>,
-    #[serde(skip)] pub structure_hint: Option<String>,
-    #[serde(skip)] pub device_info: Option<DeviceInfo>,
+    #[serde(skip)]
+    pub room_hint: Option<String>,
+    #[serde(skip)]
+    pub structure_hint: Option<String>,
+    #[serde(skip)]
+    pub device_info: Option<DeviceInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attributes: Option<SyncResponseDeviceAttributes>,
 }
@@ -20,7 +21,8 @@ pub struct SyncResponseDevice {
 #[derive(Serialize, Deserialize, Debug, Default, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct SyncResponseDeviceAttributes {
-    #[serde(skip_serializing_if = "Option::is_none")] pub scene_reversible: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub scene_reversible: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub available_thermostat_modes: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -30,9 +32,11 @@ pub struct SyncResponseDeviceAttributes {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Name {
-    #[serde(skip)] pub default_name: Vec<String>,
+    #[serde(skip)]
+    pub default_name: Vec<String>,
     pub name: Option<String>,
-    #[serde(skip)] pub nicknames: Vec<String>,
+    #[serde(skip)]
+    pub nicknames: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
@@ -95,21 +99,28 @@ pub struct Execution {
 #[derive(Serialize, Deserialize, Default, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Params {
-    #[serde(skip_serializing_if = "Option::is_none")] pub online: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")] pub on: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")] pub brightness: Option<u8>,
-    #[serde(skip_serializing_if = "Option::is_none")] pub color: Option<Color>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub online: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub on: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub brightness: Option<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub color: Option<Color>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub thermostat_temperature_ambient: Option<f32>,
-    #[serde(skip_serializing_if = "Option::is_none")] pub thermostat_humidity_ambient: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub thermostat_humidity_ambient: Option<f32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub thermostat_temperature_setpoint: Option<f32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub thermostat_temperature_setpoint_low: Option<f32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub thermostat_temperature_setpoint_high: Option<f32>,
-    #[serde(skip_serializing_if = "Option::is_none")] pub thermostat_mode: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")] pub deactivate: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub thermostat_mode: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub deactivate: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -167,17 +178,10 @@ pub struct ActionRequestInput {
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct ActionRequestPayload {
-    #[serde(default)] pub devices: Vec<RequestDevice>,
-    #[serde(default)] pub commands: Vec<Command>,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub struct AuthResponse {
-    pub token_type: String,
-    pub access_token: String,
-    pub refresh_token: String,
-    pub expires_in: i64,
+    #[serde(default)]
+    pub devices: Vec<RequestDevice>,
+    #[serde(default)]
+    pub commands: Vec<Command>,
 }
 
 #[test]

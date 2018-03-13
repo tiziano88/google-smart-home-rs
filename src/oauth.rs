@@ -1,100 +1,75 @@
-extern crate iron;
-extern crate params;
-extern crate serde_json;
+extern crate rocket;
 
-use iron::middleware::Handler;
-use iron::modifiers::Redirect;
-use iron::prelude::{IronResult, Request, Response};
-use iron::prelude::*;
-use iron::status;
+use rocket::request::Form;
+use rocket::response::Redirect;
+use rocket_contrib::Json;
 use url::Url;
 
-use google_actions::*;
-
-pub struct OAuth {
-    pub auth: OAuthAuth,
-    pub token: OAuthToken,
-    pub login: OAuthLogin,
+#[derive(FromForm)]
+struct AuthForm {
+    response_type: Option<String>,
+    client_id: Option<String>,
+    redirect_uri: Option<String>,
+    scope: Option<String>,
+    state: Option<String>,
 }
 
-impl OAuth {
-    pub fn new() -> OAuth {
-        OAuth {
-            auth: OAuthAuth {},
-            token: OAuthToken {},
-            login: OAuthLogin {},
+#[get("/auth?<data>")]
+fn auth(data: AuthForm) -> Redirect {
+    debug!("uri: {:?}", data.redirect_uri);
+    debug!("scope: {:?}", data.scope);
+
+    let s = match data.state {
+        Some(x) => x,
+        _ => "".to_string(),
+    };
+
+    let u = match data.redirect_uri {
+        Some(x) => {
+            let mut url = Url::parse(&x).unwrap();
+            url.set_query(Some(&format!("code=123&state={}", s)));
+            url
         }
-    }
+        _ => Url::parse("").unwrap(),
+    };
+
+    Redirect::found(u.as_str())
 }
 
-pub struct OAuthAuth {}
-
-impl Handler for OAuthAuth {
-    fn handle(&self, req: &mut Request) -> IronResult<Response> {
-        let map = req.get_ref::<params::Params>().unwrap();
-
-        let _ = map.find(&["response_type"]);
-        let _ = map.find(&["client_id"]);
-        let redirect_uri = map.find(&["redirect_uri"]);
-        let scope = map.find(&["scope"]);
-        let state = map.find(&["state"]);
-
-        debug!("uri: {:?}", redirect_uri);
-        debug!("scope: {:?}", scope);
-
-        let s = match state {
-            Some(&params::Value::String(ref x)) => x,
-            _ => "",
-        };
-
-        let u = match redirect_uri {
-            Some(&params::Value::String(ref x)) => {
-                let mut url = Url::parse(&x).unwrap();
-                url.set_query(Some(&format!("code=123&state={}", s)));
-                url
-            }
-            _ => Url::parse("").unwrap(),
-        };
-
-        let uu = iron::Url::from_generic_url(u).unwrap();
-
-        Ok(Response::with((status::Found, Redirect(uu))))
-    }
+#[derive(FromForm)]
+struct TokenForm {
+    grant_type: String,
+    code: String,
+    redirect_uri: String,
+    client_id: String,
 }
 
-pub struct OAuthToken {}
-
-impl Handler for OAuthToken {
-    fn handle(&self, req: &mut Request) -> IronResult<Response> {
-        let map = req.get_ref::<params::Params>().unwrap();
-
-        let _ = map.find(&["grant_type"]);
-        let _ = map.find(&["code"]);
-        let _ = map.find(&["redirect_uri"]);
-        let _ = map.find(&["client_id"]);
-
-        let auth_response = AuthResponse {
-            token_type: "bearer".to_string(),
-            access_token: "xxx".to_string(),
-            refresh_token: "yyy".to_string(),
-            expires_in: 1000000,
-        };
-
-        let res = serde_json::to_string(&auth_response).unwrap_or("".to_string());
-
-        Ok(Response::with((status::Ok, res)))
-    }
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct AuthResponse {
+    token_type: String,
+    access_token: String,
+    refresh_token: String,
+    expires_in: i64,
 }
 
-pub struct OAuthLogin {}
+#[post("/token", data = "<data>")]
+fn token(data: Form<TokenForm>) -> Json<AuthResponse> {
+    Json(AuthResponse {
+        token_type: "bearer".to_string(),
+        access_token: "xxx".to_string(),
+        refresh_token: "yyy".to_string(),
+        expires_in: 1000000,
+    })
+}
 
-impl Handler for OAuthLogin {
-    fn handle(&self, req: &mut Request) -> IronResult<Response> {
-        let map = req.get_ref::<params::Params>().unwrap();
+#[derive(FromForm)]
+struct LoginForm {
+    username: String,
+    password: String,
+}
 
-        let _ = map.find(&["username"]);
-        let _ = map.find(&["password"]);
-
-        Ok(Response::with((status::Ok, "login")))
-    }
+#[get("/login")]
+fn login() -> String {
+    "login".to_string()
 }

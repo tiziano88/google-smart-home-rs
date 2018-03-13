@@ -1,12 +1,15 @@
+#![feature(plugin, custom_derive)]
+#![plugin(rocket_codegen)]
+
 extern crate env_logger;
 extern crate futures;
 extern crate getopts;
 extern crate hyper;
-extern crate iron;
 extern crate mote;
 extern crate reqwest;
 extern crate rgb;
-extern crate router;
+extern crate rocket;
+extern crate rocket_contrib;
 extern crate scroll_phat_hd;
 extern crate serde_json;
 extern crate staticfile;
@@ -24,19 +27,16 @@ extern crate serde_derive;
 extern crate maplit;
 
 use std::env;
-use std::io::Read;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time;
 
 use getopts::Options;
-use iron::headers::{AccessControlAllowHeaders, AccessControlAllowOrigin, ContentType};
-use iron::middleware::Handler;
-use iron::prelude::{IronResult, Request, Response};
-use iron::prelude::*;
-use iron::status;
-use router::Router;
+use rocket::State;
+use rocket::response::Response;
+use rocket_contrib::Json;
 use unicase::UniCase;
+use hyper::header::{AccessControlAllowHeaders, AccessControlAllowOrigin};
 
 mod google_actions;
 use google_actions::{ActionRequest, ExecuteResponse, ExecuteResponsePayload, QueryResponse,
@@ -60,161 +60,143 @@ mod oauth;
 
 const BLACK: rgb::RGB8 = rgb::RGB8 { r: 0, g: 0, b: 0 };
 
+#[derive(Serialize, Deserialize)]
+enum ActionResponse {
+    Sync(SyncResponse),
+    Query(QueryResponse),
+    Execute(ExecuteResponse),
+}
+
 struct Hub {
     devices: Vec<Arc<Mutex<Device>>>,
     proxy_urls: Vec<String>,
 }
 
-impl Handler for Hub {
-    fn handle(&self, req: &mut Request) -> IronResult<Response> {
-        info!("hub handler");
-        let mut body = String::new();
-        req.body.read_to_string(&mut body).unwrap();
-        let action_request: ActionRequest = serde_json::from_str(&body).unwrap();
+#[post("/action", format = "application/json", data = "<message>")]
+fn action(message: Json<ActionRequest>, state: State<Hub>) -> Option<Json<ActionResponse>> {
+    info!("action_request: {:?}", message);
+    for input in message.0.inputs {
+        match input.intent.as_ref() {
+            "action.devices.SYNC" => {
+                let mut response = SyncResponse {
+                    request_id: message.0.request_id.clone(),
+                    payload: SyncResponsePayload {
+                        agent_user_id: "1111".to_string(),
+                        devices: vec![],
+                    },
+                };
 
-        info!("action_request: {:?}", action_request);
-
-        for input in action_request.inputs {
-            match input.intent.as_ref() {
-                "action.devices.SYNC" => {
-                    let mut response = SyncResponse {
-                        request_id: action_request.request_id.clone(),
-                        payload: SyncResponsePayload {
-                            agent_user_id: "1111".to_string(),
-                            devices: vec![],
-                        },
-                    };
-
-                    for device in &self.devices {
-                        let device = device.lock().unwrap();
-                        response.payload.devices.push(device.sync().unwrap());
-                    }
-
-                    let client = reqwest::Client::new();
-                    for url in &self.proxy_urls {
-                        debug!("proxy url: {:?}", url);
-                        let mut res = client.post(url).body(body.to_string()).send().unwrap();
-                        debug!("proxy response: {:?}", res);
-                        let proxy_response = res.json::<SyncResponse>().unwrap();
-                        response
-                            .payload
-                            .devices
-                            .extend(proxy_response.payload.devices);
-                    }
-
-                    let res = serde_json::to_string(&response).unwrap_or("".to_string());
-                    debug!("action_response: {:?}", res);
-                    let mut rsp = Response::with((status::Ok, res));
-                    rsp.headers.set(ContentType::json());
-                    // For browser access.
-                    rsp.headers.set(AccessControlAllowOrigin::Any);
-                    return Ok(rsp);
+                for device in &state.devices {
+                    let device = device.lock().unwrap();
+                    response.payload.devices.push(device.sync().unwrap());
                 }
-                "action.devices.QUERY" => {
-                    let mut response = QueryResponse {
-                        request_id: action_request.request_id.clone(),
-                        payload: QueryResponsePayload {
-                            devices: btreemap!{},
-                        },
-                    };
 
-                    if let Some(payload) = input.payload {
-                        for request_device in payload.devices {
-                            for device in &self.devices {
-                                let device = device.lock().unwrap();
-                                if request_device.id == device.id() {
-                                    response
-                                        .payload
-                                        .devices
-                                        .insert(device.id(), device.query().unwrap());
-                                }
+                let client = reqwest::Client::new();
+                for url in &state.proxy_urls {
+                    debug!("proxy url: {:?}", url);
+                    // XXX
+                    //let mut res = client.post(url).body(body.to_string()).send().unwrap();
+                    //debug!("proxy response: {:?}", res);
+                    //let proxy_response = res.json::<SyncResponse>().unwrap();
+                    //response
+                    //.payload
+                    //.devices
+                    //.extend(proxy_response.payload.devices);
+                }
+
+                return Some(Json(ActionResponse::Sync(response)));
+            }
+            "action.devices.QUERY" => {
+                let mut response = QueryResponse {
+                    request_id: message.0.request_id.clone(),
+                    payload: QueryResponsePayload {
+                        devices: btreemap!{},
+                    },
+                };
+
+                if let Some(payload) = input.payload {
+                    for request_device in payload.devices {
+                        for device in &state.devices {
+                            let device = device.lock().unwrap();
+                            if request_device.id == device.id() {
+                                response
+                                    .payload
+                                    .devices
+                                    .insert(device.id(), device.query().unwrap());
                             }
                         }
                     }
-
-                    let client = reqwest::Client::new();
-                    for url in &self.proxy_urls {
-                        debug!("proxy url: {:?}", url);
-                        let mut res = client.post(url).body(body.to_string()).send().unwrap();
-                        debug!("proxy response: {:?}", res);
-                        let proxy_response = res.json::<QueryResponse>().unwrap();
-                        response
-                            .payload
-                            .devices
-                            .extend(proxy_response.payload.devices);
-                    }
-
-                    let res = serde_json::to_string(&response).unwrap_or("".to_string());
-                    debug!("action_response: {:?}", res);
-                    let mut rsp = Response::with((status::Ok, res));
-                    rsp.headers.set(ContentType::json());
-                    // For browser access.
-                    rsp.headers.set(AccessControlAllowOrigin::Any);
-                    return Ok(rsp);
                 }
-                "action.devices.EXECUTE" => {
-                    let mut response = ExecuteResponse {
-                        request_id: action_request.request_id.clone(),
-                        payload: ExecuteResponsePayload {
-                            error_code: None,
-                            debug_string: None,
-                            commands: vec![],
-                        },
-                    };
 
-                    if let Some(ref p) = input.payload {
-                        for command in &p.commands {
-                            debug!("command: {:?}", command);
-                            for execution in &command.execution {
-                                debug!("execution: {:?}", execution);
-                                for request_device in &command.devices {
-                                    debug!("request_device: {:?}", request_device);
-                                    for device in &self.devices {
-                                        let mut device = device.lock().unwrap();
-                                        if request_device.id == device.id() {
-                                            response
-                                                .payload
-                                                .commands
-                                                .push(device.execute(&execution.params).unwrap());
-                                        }
+                let client = reqwest::Client::new();
+                for url in &state.proxy_urls {
+                    debug!("proxy url: {:?}", url);
+                    // XXX
+                    //let mut res = client.post(url).body(body.to_string()).send().unwrap();
+                    //debug!("proxy response: {:?}", res);
+                    //let proxy_response = res.json::<QueryResponse>().unwrap();
+                    //response
+                    //.payload
+                    //.devices
+                    //.extend(proxy_response.payload.devices);
+                }
+
+                return Some(Json(ActionResponse::Query(response)));
+            }
+            "action.devices.EXECUTE" => {
+                let mut response = ExecuteResponse {
+                    request_id: message.0.request_id.clone(),
+                    payload: ExecuteResponsePayload {
+                        error_code: None,
+                        debug_string: None,
+                        commands: vec![],
+                    },
+                };
+
+                if let Some(ref p) = input.payload {
+                    for command in &p.commands {
+                        debug!("command: {:?}", command);
+                        for execution in &command.execution {
+                            debug!("execution: {:?}", execution);
+                            for request_device in &command.devices {
+                                debug!("request_device: {:?}", request_device);
+                                for device in &state.devices {
+                                    let mut device = device.lock().unwrap();
+                                    if request_device.id == device.id() {
+                                        response
+                                            .payload
+                                            .commands
+                                            .push(device.execute(&execution.params).unwrap());
                                     }
                                 }
                             }
                         }
                     }
-
-                    let client = reqwest::Client::new();
-                    for url in &self.proxy_urls {
-                        debug!("proxy url: {:?}", url);
-                        let mut res = client.post(url).body(body.to_string()).send().unwrap();
-                        debug!("proxy response: {:?}", res);
-                        let proxy_response = res.json::<ExecuteResponse>().unwrap();
-                        response
-                            .payload
-                            .commands
-                            .extend(proxy_response.payload.commands);
-                    }
-
-                    let res = serde_json::to_string(&response).unwrap_or("".to_string());
-                    debug!("action_response: {:?}", res);
-                    let mut rsp = Response::with((status::Ok, res));
-                    rsp.headers.set(ContentType::json());
-                    // For browser access.
-                    rsp.headers.set(AccessControlAllowOrigin::Any);
-                    return Ok(rsp);
                 }
-                i => {
-                    debug!("unsupported intent: {:?}", i);
+
+                let client = reqwest::Client::new();
+                for url in &state.proxy_urls {
+                    debug!("proxy url: {:?}", url);
+                    // XXX
+                    //let mut res = client.post(url).body(body.to_string()).send().unwrap();
+                    //debug!("proxy response: {:?}", res);
+                    //let proxy_response = res.json::<ExecuteResponse>().unwrap();
+                    //response
+                    //.payload
+                    //.commands
+                    //.extend(proxy_response.payload.commands);
                 }
+
+                return Some(Json(ActionResponse::Execute(response)));
+            }
+            i => {
+                debug!("unsupported intent: {:?}", i);
+                return None;
             }
         }
-
-        let mut rsp = Response::with((status::Ok, "ACTION"));
-        rsp.headers.set(ContentType::json());
-        // For browser access.
-        rsp.headers.set(AccessControlAllowOrigin::Any);
-        Ok(rsp)
     }
+
+    return None;
 }
 
 fn main() {
@@ -392,6 +374,8 @@ fn main() {
     });
 
     thread::spawn(move || {
+        // XXX
+        return;
         let mut display: Box<scroll_phat_hd::display::Display> = if display_i2c == "" {
             Box::new(scroll_phat_hd::display::UnicodeDisplay::new())
         } else {
@@ -427,29 +411,34 @@ fn main() {
         }
     });
 
-    let oauth = oauth::OAuth::new();
-    let mut control = Router::new();
-    control
-        .get("/auth", oauth.auth, "auth")
-        .post("/token", oauth.token, "token")
-        .get("/login", oauth.login, "login")
-        .post("/action", hub, "post action")
-        .get("/action", get_action_handler, "get action")
-        .options("/action", options_action_handler, "get action")
-        .get("/", staticfile::Static::new(index), "index");
-    info!("Listening on {}", http_address);
-    Iron::new(control).http(http_address).unwrap();
+    rocket::ignite()
+        .manage(hub)
+        .mount(
+            "/",
+            routes![
+                get_action_handler,
+                options_action_handler,
+                action,
+                oauth::auth,
+                oauth::token,
+                oauth::login,
+            ],
+        )
+        .launch();
 }
 
-fn get_action_handler(_: &mut Request) -> IronResult<Response> {
-    Ok(Response::with((status::Ok, "get action")))
+#[get("/action")]
+fn get_action_handler() -> String {
+    "get action".to_string()
 }
 
-fn options_action_handler(_: &mut Request) -> IronResult<Response> {
-    let mut rsp = Response::with((status::Ok, "options"));
-    rsp.headers.set(AccessControlAllowOrigin::Any);
-    rsp.headers.set(AccessControlAllowHeaders(vec![
-        UniCase("Content-Type".to_string()),
-    ]));
-    Ok(rsp)
+#[options("/action")]
+fn options_action_handler() -> Response<'static> {
+    Response::build()
+        // XXX
+        //.header(AccessControlAllowOrigin::Any)
+        //.header(AccessControlAllowHeaders(vec![
+        //UniCase("Content-Type".to_string()),
+        //]))
+        .finalize()
 }

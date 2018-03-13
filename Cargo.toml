@@ -1,20 +1,20 @@
 [package]
 name = "smartlights"
-version = "0.1.0"
+version = "0.1.2"
 authors = ["Tiziano Santoro <tiziano88@gmail.com>"]
 
 [dependencies]
 env_logger = "0.4"
 futures = "0.1"
 hyper = "0.11"
-iron = "*"
 log = "0.3"
 maplit = "0.1"
 mote = "0.1.2"
-params = "*"
 reqwest = "0.8"
 rgb = "0.7.0"
-router = "*"
+rocket = "0.3.6"
+rocket_codegen = "0.3.6"
+rocket_contrib = "0.3.6"
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
