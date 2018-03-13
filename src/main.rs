@@ -36,7 +36,7 @@ use rocket::State;
 use rocket::response::Response;
 use rocket_contrib::Json;
 use unicase::UniCase;
-use hyper::header::{AccessControlAllowHeaders, AccessControlAllowOrigin};
+use rocket::http::hyper::header::{AccessControlAllowHeaders, AccessControlAllowOrigin};
 
 mod google_actions;
 use google_actions::{ActionRequest, ExecuteResponse, ExecuteResponsePayload, QueryResponse,
@@ -205,17 +205,17 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     let mut opts = Options::new();
-    opts.optopt("", "http_address", "HTTP address to listen on", "ADDRESS");
-    opts.optopt("", "index", "file to serve as index", "FILE");
+    opts.optopt("", "http_port", "HTTP port to listen on", "N");
     opts.optopt("", "mote_dev", "Serial port connecting to Mote", "FILE");
     opts.optopt("", "display_i2c", "I2C port to use as display", "N");
 
     debug!("parsing args");
     let matches = opts.parse(&args[1..]).unwrap();
-    let http_address = matches
-        .opt_str("http_address")
-        .unwrap_or("0.0.0.0:1234".to_string());
-    let index = matches.opt_str("index").unwrap_or("/dev/null".to_string());
+    let http_port = matches
+        .opt_str("http_port")
+        .unwrap_or("1234".to_string())
+        .parse::<u16>()
+        .unwrap();
     let mote_dev = matches
         .opt_str("mote_dev")
         .unwrap_or("/dev/ttyACM0".to_string());
@@ -411,7 +411,11 @@ fn main() {
         }
     });
 
-    rocket::ignite()
+    let config = rocket::Config::build(rocket::config::Environment::Development)
+        .port(http_port)
+        .unwrap();
+
+    rocket::custom(config, true)
         .manage(hub)
         .mount(
             "/",
@@ -435,10 +439,9 @@ fn get_action_handler() -> String {
 #[options("/action")]
 fn options_action_handler() -> Response<'static> {
     Response::build()
-        // XXX
-        //.header(AccessControlAllowOrigin::Any)
-        //.header(AccessControlAllowHeaders(vec![
-        //UniCase("Content-Type".to_string()),
-        //]))
+        .header(AccessControlAllowOrigin::Any)
+        .header(AccessControlAllowHeaders(vec![
+            UniCase("Content-Type".to_string()),
+        ]))
         .finalize()
 }

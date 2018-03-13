@@ -5,7 +5,7 @@ use rocket::response::Redirect;
 use rocket_contrib::Json;
 use url::Url;
 
-#[derive(FromForm)]
+#[derive(FromForm, Debug)]
 struct AuthForm {
     response_type: Option<String>,
     client_id: Option<String>,
@@ -16,8 +16,7 @@ struct AuthForm {
 
 #[get("/auth?<data>")]
 fn auth(data: AuthForm) -> Redirect {
-    debug!("uri: {:?}", data.redirect_uri);
-    debug!("scope: {:?}", data.scope);
+    debug!("auth data: {:?}", data);
 
     let s = match data.state {
         Some(x) => x,
@@ -61,12 +60,6 @@ fn token(data: Form<TokenForm>) -> Json<AuthResponse> {
         refresh_token: "yyy".to_string(),
         expires_in: 1000000,
     })
-}
-
-#[derive(FromForm)]
-struct LoginForm {
-    username: String,
-    password: String,
 }
 
 #[get("/login")]
