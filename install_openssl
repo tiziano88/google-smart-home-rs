@@ -1,0 +1,9 @@
+# From https://stackoverflow.com/questions/37375712/cross-compile-rust-openssl-for-raspberry-pi-2
+
+wget https://www.openssl.org/source/openssl-1.0.1t.tar.gz
+tar xzf openssl-1.0.1t.tar.gz
+export MACHINE=armv7
+export ARCH=arm
+export CC=arm-linux-gnueabi-gcc
+cd openssl-1.0.1t && ./config shared && make && cd -
+rm openssl-1.0.1t.tar.gz
