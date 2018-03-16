@@ -6,8 +6,8 @@ set -e
 #readonly TARGET='arm-unknown-linux-gnueabihf'
 readonly TARGET='arm-unknown-linux-gnueabi'
 
-readonly REMOTE='pi@0.tcp.eu.ngrok.io'
-readonly PORT='13257'
+readonly REMOTE='pi@192.168.0.21'
+readonly PORT='22'
 
 # See https://stackoverflow.com/questions/37375712/cross-compile-rust-openssl-for-raspberry-pi-2
 export OPENSSL_DIR="$HOME/src/google-smart-home-rs/openssl-1.0.1t"

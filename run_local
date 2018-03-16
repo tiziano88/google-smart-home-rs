@@ -1,0 +1,6 @@
+#!/bin/sh
+
+set -x
+set -e
+
+RUST_LOG='main,smartlights,rocket::rocket' cargo run

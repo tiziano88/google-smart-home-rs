@@ -13,6 +13,10 @@ cargo run
 ngrok http 1234
 ```
 
+```
+lt --port=1234 --subdomain=$USER$HOST
+```
+
 ## Setup instructions
 
 1. Compile and run the server with `cargo run`.

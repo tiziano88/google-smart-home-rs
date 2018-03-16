@@ -61,6 +61,7 @@ mod oauth;
 const BLACK: rgb::RGB8 = rgb::RGB8 { r: 0, g: 0, b: 0 };
 
 #[derive(Serialize, Deserialize)]
+#[serde(untagged)]
 enum ActionResponse {
     Sync(SyncResponse),
     Query(QueryResponse),
@@ -103,6 +104,7 @@ fn action(message: Json<ActionRequest>, state: State<Hub>) -> Option<Json<Action
                     //.devices
                     //.extend(proxy_response.payload.devices);
                 }
+                info!("response: {:?}", serde_json::to_string(&response));
 
                 return Some(Json(ActionResponse::Sync(response)));
             }
@@ -330,11 +332,11 @@ fn main() {
             kitchen_lights.clone(),
             bathroom_lights.clone(),
             living_room_lights.clone(),
-            party_mode.clone(),
-            italian_mode.clone(),
-            night_mode.clone(),
-            strobe_mode.clone(),
-            thermostat.clone(),
+            //party_mode.clone(),
+            //italian_mode.clone(),
+            //night_mode.clone(),
+            //strobe_mode.clone(),
+            //thermostat.clone(),
         ],
         proxy_urls: vec![],
     };
@@ -413,6 +415,7 @@ fn main() {
 
     let config = rocket::Config::build(rocket::config::Environment::Development)
         .port(http_port)
+        .log_level(rocket::config::LoggingLevel::Debug)
         .unwrap();
 
     rocket::custom(config, true)
@@ -420,9 +423,9 @@ fn main() {
         .mount(
             "/",
             routes![
+                action,
                 get_action_handler,
                 options_action_handler,
-                action,
                 oauth::auth,
                 oauth::token,
                 oauth::login,
@@ -433,11 +436,13 @@ fn main() {
 
 #[get("/action")]
 fn get_action_handler() -> String {
+    debug!("get action");
     "get action".to_string()
 }
 
 #[options("/action")]
 fn options_action_handler() -> Response<'static> {
+    debug!("options action");
     Response::build()
         .header(AccessControlAllowOrigin::Any)
         .header(AccessControlAllowHeaders(vec![

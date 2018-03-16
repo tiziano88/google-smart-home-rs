@@ -35,16 +35,16 @@ fn auth(data: AuthForm) -> Redirect {
     Redirect::found(u.as_str())
 }
 
-#[derive(FromForm)]
+#[derive(FromForm, Debug)]
 struct TokenForm {
     grant_type: String,
     code: String,
     redirect_uri: String,
     client_id: String,
+    client_secret: String,
 }
 
 #[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
 struct AuthResponse {
     token_type: String,
     access_token: String,
@@ -54,6 +54,7 @@ struct AuthResponse {
 
 #[post("/token", data = "<data>")]
 fn token(data: Form<TokenForm>) -> Json<AuthResponse> {
+    debug!("token: {:?}", data.get());
     Json(AuthResponse {
         token_type: "bearer".to_string(),
         access_token: "xxx".to_string(),
@@ -64,5 +65,6 @@ fn token(data: Form<TokenForm>) -> Json<AuthResponse> {
 
 #[get("/login")]
 fn login() -> String {
+    debug!("login");
     "login".to_string()
 }
