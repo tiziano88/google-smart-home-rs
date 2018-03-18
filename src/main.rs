@@ -414,6 +414,7 @@ fn main() {
     });
 
     let config = rocket::Config::build(rocket::config::Environment::Development)
+        .address("0.0.0.0")
         .port(http_port)
         .log_level(rocket::config::LoggingLevel::Debug)
         .unwrap();
