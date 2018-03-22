@@ -4,7 +4,6 @@
 extern crate env_logger;
 extern crate futures;
 extern crate getopts;
-extern crate hyper;
 extern crate mote;
 extern crate reqwest;
 extern crate rgb;
