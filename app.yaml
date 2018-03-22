@@ -1,2 +1,11 @@
 runtime: custom
-vm: true
+env: flex
+
+skip_files:
+  - ^(.*/)?#.*#$
+  - ^(.*/)?.*~$
+  - ^(.*/)?.*\.py[co]$
+  - ^(.*/)?.*/RCS/.*$
+  - ^(.*/)?\..*$
+  - ^target/.*$
+  - ^openssl.*$

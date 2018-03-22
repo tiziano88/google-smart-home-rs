@@ -429,9 +429,27 @@ fn main() {
                 oauth::auth,
                 oauth::token,
                 oauth::login,
+                start,
+                stop,
+                health,
             ],
         )
         .launch();
+}
+
+#[get("/_ah/start")]
+fn start() -> String {
+    "OK!".to_string()
+}
+
+#[get("/_ah/stop")]
+fn stop() -> String {
+    "OK!".to_string()
+}
+
+#[get("/_ah/health")]
+fn health() -> String {
+    "OK!".to_string()
 }
 
 #[get("/action")]

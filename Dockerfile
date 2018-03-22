@@ -1,7 +1,13 @@
-FROM ubuntu:xenial
+FROM rustlang/rust:nightly
 
-ADD ./target/debug/smartlights /bin/smartlights
+EXPOSE 8080
 
-EXPOSE 1234
+ENV SOURCES=/sources
 
-CMD smartlights
+RUN mkdir -p $SOURCES
+
+COPY ./ $SOURCES
+
+WORKDIR $SOURCES
+
+CMD cargo run -- --http_port=8080
