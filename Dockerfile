@@ -16,7 +16,6 @@ COPY src $SOURCES/src
 RUN cargo build
 
 FROM alpine:latest
-
-COPY --from=builder /sources/target/debug/smartlights .
-
-CMD ./smartlights --http_port=8080
+WORKDIR /root
+COPY --from=builder /sources/target/debug/smartlights /root/smartlights
+CMD ["/root/smartlights", "--http_port=8080"]
