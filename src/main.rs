@@ -72,6 +72,7 @@ struct Hub {
     proxy_urls: Vec<String>,
 }
 
+// Test
 #[post("/action", format = "application/json", data = "<message>")]
 fn action(message: Json<ActionRequest>, state: State<Hub>) -> Option<Json<ActionResponse>> {
     info!("action_request: {:?}", message);

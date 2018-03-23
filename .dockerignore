@@ -1,0 +1,6 @@
+target/
+**/*.rs.bk
+
+/action_local.json
+/creds.data
+/openssl-1.0.1t

@@ -3,6 +3,10 @@ name = "smartlights"
 version = "0.1.2"
 authors = ["Tiziano Santoro <tiziano88@gmail.com>"]
 
+[lib]
+name = "dummy"
+path = "/dev/null"
+
 [dependencies]
 env_logger = "0.4"
 futures = "0.1"
