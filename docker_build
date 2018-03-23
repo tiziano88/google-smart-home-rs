@@ -1,1 +1,1 @@
-docker build . --tag smartlights:latest --tag gcr.io/smartlights-ae/smartligths:latest
+docker build . --tag smartlights:latest --tag gcr.io/smartlights-ae/smartlights:latest

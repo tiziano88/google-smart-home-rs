@@ -9,13 +9,14 @@ RUN mkdir -p $SOURCES
 
 COPY Cargo.toml $SOURCES
 COPY Cargo.lock $SOURCES
-RUN cargo build --lib
+RUN cargo build --lib --release
 
 COPY src $SOURCES/src
 
-RUN cargo build
+RUN cargo build --release
 
 FROM alpine:latest
 WORKDIR /root
-COPY --from=builder /sources/target/debug/smartlights /root/smartlights
-CMD ["/root/smartlights", "--http_port=8080"]
+COPY --from=builder /sources/target/release/smartlights /sl
+#CMD ["ls", "-asl", "/sl"]
+CMD ["/sl", "--http_port=8080"]
