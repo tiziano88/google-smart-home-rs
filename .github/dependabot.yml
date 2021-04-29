@@ -1,0 +1,20 @@
+version: 2
+updates:
+- package-ecosystem: cargo
+  directory: "/"
+  schedule:
+    interval: monthly
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: rocket_codegen
+    versions:
+    - 0.4.6
+  - dependency-name: serde_derive
+    versions:
+    - 1.0.118
+  - dependency-name: rocket
+    versions:
+    - 0.4.6
+  - dependency-name: url
+    versions:
+    - 2.1.1
