@@ -8,7 +8,7 @@ name = "dummy"
 path = "/dev/null"
 
 [dependencies]
-env_logger = "0.4"
+env_logger = "0.6"
 futures = "0.1"
 log = "0.3"
 maplit = "0.1"
